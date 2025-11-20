@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
+import com.example.saber_share.Cuenta;
 import com.example.saber_share.MainActivity;
 import com.example.saber_share.cuenta.InicioSesion;
 
@@ -39,7 +40,7 @@ public class SessionManager {
 
     public void checkLogin() {
         if (!this.isLoggedIn()) {
-            Intent i = new Intent(context, InicioSesion.class);
+            Intent i = new Intent(context, Cuenta.class);
             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
@@ -57,7 +58,7 @@ public class SessionManager {
     public void logoutUser() {
         editor.clear();
         editor.commit();
-        Intent i = new Intent(context, InicioSesion.class);
+        Intent i = new Intent(context, Cuenta.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(i);
