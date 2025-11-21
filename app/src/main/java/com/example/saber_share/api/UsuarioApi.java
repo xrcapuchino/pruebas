@@ -18,6 +18,9 @@ public interface UsuarioApi {
             @Query("user") String user
     );
 
+    @GET("usuario")
+    Call<List<UsuarioDto>> BuscaCorreo(@Query("correo") String correo);
+
     // POST /Amaury/api/usuario
     @POST("usuario")
     Call<UsuarioDto> registrar(
