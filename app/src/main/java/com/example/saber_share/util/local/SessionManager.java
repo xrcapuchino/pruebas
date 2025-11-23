@@ -1,12 +1,10 @@
-package com.example.saber_share.util;
+package com.example.saber_share.util.local;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
 import com.example.saber_share.Cuenta;
-import com.example.saber_share.MainActivity;
-import com.example.saber_share.cuenta.InicioSesion;
 
 import java.util.HashMap;
 

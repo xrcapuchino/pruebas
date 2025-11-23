@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/cuentaAutentificacion"
-        android:name="com.example.saber_share.cuenta.CuentaAutentificacion"
+        android:name="com.example.saber_share.fragmentos.cuenta.CuentaAutentificacion"
         android:label="fragment_cuenta_autentificacion"
         tools:layout="@layout/fragment_cuenta_autentificacion" >
         <action
@@ -19,9 +19,9 @@
     </fragment>
     <fragment
         android:id="@+id/inicioSesion"
-        android:name="com.example.saber_share.cuenta.InicioSesion"
+        android:name="com.example.saber_share.fragmentos.cuenta.InicioSesion"
         android:label="fragment_inicio_sesion"
-        tools:layout="@layout/fragment_inicio_sesion" >
+        tools:layout="@layout/fragment_cuenta_inicio_sesion" >
         <action
             android:id="@+id/action_inicioSesion_to_cuentaAutentificacion"
             app:destination="@id/cuentaAutentificacion" />
@@ -31,9 +31,9 @@
     </fragment>
     <fragment
         android:id="@+id/registroSesion"
-        android:name="com.example.saber_share.cuenta.RegistroSesion"
+        android:name="com.example.saber_share.fragmentos.cuenta.RegistroSesion"
         android:label="fragment_registro_sesion"
-        tools:layout="@layout/fragment_registro_sesion" >
+        tools:layout="@layout/fragment_cuenta_registro_sesion" >
         <action
             android:id="@+id/action_registroSesion_to_inicioSesion"
             app:destination="@id/inicioSesion" />

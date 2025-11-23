@@ -1,4 +1,4 @@
-package com.example.saber_share.dto;
+package com.example.saber_share.model;
 
 public class UsuarioDto {
     private Integer id;

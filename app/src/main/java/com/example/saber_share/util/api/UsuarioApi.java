@@ -1,6 +1,6 @@
-package com.example.saber_share.api;
+package com.example.saber_share.util.api;
 
-import com.example.saber_share.dto.UsuarioDto;
+import com.example.saber_share.model.UsuarioDto;
 
 import java.util.List;
 

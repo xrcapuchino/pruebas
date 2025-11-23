@@ -1,4 +1,4 @@
-package com.example.saber_share.api;
+package com.example.saber_share.util.api;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 

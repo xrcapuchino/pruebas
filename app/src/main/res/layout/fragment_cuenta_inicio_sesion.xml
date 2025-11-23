@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:padding="24dp"
     android:background="@android:color/white"
-    tools:context=".cuenta.InicioSesion">
+    tools:context=".fragmentos.cuenta.InicioSesion">
 
     <!-- Título -->
     <TextView

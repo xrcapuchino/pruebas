@@ -1,4 +1,4 @@
-package com.example.saber_share.cuenta;
+package com.example.saber_share.fragmentos.cuenta;
 
 import android.os.Bundle;
 
