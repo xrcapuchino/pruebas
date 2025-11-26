@@ -36,7 +36,7 @@ public class UsuarioRepository {
         call.enqueue(callback);
     }
 
-    public void guardarSesion(String usuario, String password) {
-        sessionManager.createLoginSession(usuario, password);
+    public void guardarSesion(String usuario, String password, int id) {
+        sessionManager.createLoginSession(usuario, password, id);
     }
 }

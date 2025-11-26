@@ -44,6 +44,7 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Inicializamos el repositorio
         repository = new UsuarioRepository(requireContext());
 
         etUsuario = view.findViewById(R.id.etUsuario);
@@ -61,16 +62,16 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        String opcion = ((Button) view).getText().toString();
-        if (opcion.equals("Registrarse")) {
+        // RECOMENDACIÓN: Usar IDs es más seguro que comparar texto
+        int id = view.getId();
+        if (id == R.id.btnRegistrarse) {
             validarDatosYProceder();
-        } else if (opcion.equals("Iniciar Sesion")) {
+        } else if (id == R.id.btnIniciarSesion) {
             Navigation.findNavController(view).navigate(R.id.action_registroSesion_to_inicioSesion);
         }
     }
 
     private void validarDatosYProceder() {
-        // Recolección de datos...
         String usuario = etUsuario.getText().toString().trim();
         String nombre = etNombre.getText().toString().trim();
         String apellido = etApellido.getText().toString().trim();
@@ -78,23 +79,32 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
         String telefono = etTelefono.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(usuario)) {
-            etUsuario.setError("Requerido"); return;
-        }
-        if (TextUtils.isEmpty(nombre)) {
-            etNombre.setError("Requerido"); return;
-        }
+        if (TextUtils.isEmpty(usuario)) { etUsuario.setError("Requerido"); return; }
+        if (TextUtils.isEmpty(nombre)) { etNombre.setError("Requerido"); return; }
+        // ... (agrega validaciones para los demás campos si gustas)
 
         btnRegistrarse.setEnabled(false);
         btnRegistrarse.setText("Validando...");
 
+        // Paso 1: Verificar Usuario
         repository.verificarUsuario(usuario, new Callback<List<UsuarioDto>>() {
             @Override
             public void onResponse(Call<List<UsuarioDto>> call, Response<List<UsuarioDto>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                // Lógica de validación manual (si la lista no está vacía y coincide el usuario)
+                boolean usuarioExiste = false;
+                if (response.isSuccessful() && response.body() != null) {
+                    for (UsuarioDto u : response.body()) {
+                        if (u.getUser().equalsIgnoreCase(usuario)) {
+                            usuarioExiste = true; break;
+                        }
+                    }
+                }
+
+                if (usuarioExiste) {
                     desbloquearBoton();
                     etUsuario.setError("Usuario ya en uso");
                 } else {
+                    // Paso 2: Verificar Correo
                     validarCorreo(usuario, nombre, apellido, correo, telefono, password);
                 }
             }
@@ -115,8 +125,7 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
                 if (response.isSuccessful() && response.body() != null) {
                     for (UsuarioDto u : response.body()) {
                         if (u.getCorreo() != null && u.getCorreo().equalsIgnoreCase(mail)) {
-                            correoExiste = true;
-                            break;
+                            correoExiste = true; break;
                         }
                     }
                 }
@@ -125,6 +134,7 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
                     desbloquearBoton();
                     etCorreo.setError("Correo ya registrado");
                 } else {
+                    // Paso 3: Registrar (NO PASAMOS ID AQUÍ)
                     realizarRegistro(user, nom, ape, mail, tel, pass);
                 }
             }
@@ -137,6 +147,7 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
         });
     }
 
+    // CORRECCIÓN: Quitamos el parámetro 'int id' de aquí
     private void realizarRegistro(String user, String nom, String ape, String mail, String tel, String pass) {
         UsuarioDto nuevo = new UsuarioDto();
         nuevo.setUser(user);
@@ -145,13 +156,18 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
         nuevo.setCorreo(mail);
         nuevo.setTelefono(tel);
         nuevo.setPassword(pass);
+        // El ID y el Rol se asignan automáticamente en el backend
 
         repository.registrarUsuario(nuevo, new Callback<UsuarioDto>() {
             @Override
             public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
                 desbloquearBoton();
-                if (response.isSuccessful()) {
-                    repository.guardarSesion(user, pass);
+                if (response.isSuccessful() && response.body() != null) {
+                    // ¡AQUÍ ES DONDE OBTENEMOS EL ID DEL NUEVO USUARIO!
+                    int nuevoId = response.body().getId();
+
+                    // Guardamos sesión con el ID real que nos devolvió la base de datos
+                    repository.guardarSesion(user, pass, nuevoId);
                     irAlMain();
                 } else {
                     mostrarError("Error al registrar");
@@ -174,11 +190,14 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
     }
 
     private void desbloquearBoton() {
-        btnRegistrarse.setEnabled(true);
-        btnRegistrarse.setText("Registrarse");
+        if(btnRegistrarse != null) {
+            btnRegistrarse.setEnabled(true);
+            btnRegistrarse.setText("Registrarse");
+        }
     }
 
     private void mostrarError(String msg) {
-        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+        if(getContext() != null)
+            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }
 }

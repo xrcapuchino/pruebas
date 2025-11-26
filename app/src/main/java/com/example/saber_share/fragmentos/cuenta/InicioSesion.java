@@ -35,7 +35,8 @@ public class InicioSesion extends Fragment implements View.OnClickListener {
 
     private UsuarioRepository repository;
 
-    public InicioSesion() {}
+    public InicioSesion() {
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -84,7 +85,6 @@ public class InicioSesion extends Fragment implements View.OnClickListener {
         btnIniciarSesion.setEnabled(false);
         btnIniciarSesion.setText("Cargando...");
 
-        // USAMOS EL REPOSITORIO
         repository.verificarUsuario(usuarioInput, new Callback<List<UsuarioDto>>() {
             @Override
             public void onResponse(Call<List<UsuarioDto>> call, Response<List<UsuarioDto>> response) {
@@ -94,7 +94,7 @@ public class InicioSesion extends Fragment implements View.OnClickListener {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     UsuarioDto u = response.body().get(0);
                     if (passwordInput.equals(u.getPassword())) {
-                        repository.guardarSesion(u.getCorreo(), u.getPassword());
+                        repository.guardarSesion(u.getCorreo(), u.getPassword(), u.getId());
                         irAlMain();
                     } else {
                         Toast.makeText(getContext(), "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
