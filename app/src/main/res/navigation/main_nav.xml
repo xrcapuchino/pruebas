@@ -24,11 +24,25 @@
         android:id="@+id/vender"
         android:name="com.example.saber_share.fragmentos.contenido.Vender"
         android:label="fragment_main_vender"
-        tools:layout="@layout/fragment_main_vender" />
+        tools:layout="@layout/fragment_main_vender" >
+        <action
+            android:id="@+id/action_vender_to_resumenPublicacion"
+            app:destination="@id/resumenPublicacion" />
+    </fragment>
     <fragment
         android:id="@+id/comprar"
         android:name="com.example.saber_share.fragmentos.contenido.Comprar"
         android:label="fragment_main_comprar"
         tools:layout="@layout/fragment_main_comprar" />
     <include app:graph="@navigation/cuenta_nav" />
+    <fragment
+        android:id="@+id/resumenPublicacion"
+        android:name="com.example.saber_share.fragmentos.contenido.ResumenPublicacion"
+        android:label="ResumenPublicacion" >
+        <action
+            android:id="@+id/action_resumenPublicacion_to_inicio"
+            app:destination="@id/inicio" />
+    </fragment>
+
+
 </navigation>

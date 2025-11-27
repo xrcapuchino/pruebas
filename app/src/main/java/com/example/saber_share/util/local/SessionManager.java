@@ -20,7 +20,7 @@ public class SessionManager {
     private SharedPreferences.Editor editor;
     private Context context;
 
-    public SessionManager(Context       context) {
+    public SessionManager(Context context) {
         this.context = context;
         pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = pref.edit();
@@ -30,7 +30,7 @@ public class SessionManager {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putString(KEY_USUARIO, usuario);
         editor.putString(KEY_PASSWORD, password);
-        editor.putInt(KEY_ID, id); // <--- GUARDAMOS EL ID
+        editor.putInt(KEY_ID, id);
         editor.commit();
     }
 
@@ -67,7 +67,7 @@ public class SessionManager {
     }
 
     public int getUserId() {
-        return pref.getInt(KEY_ID, -1); // Devuelve -1 si no hay ID
+        return pref.getInt(KEY_ID, -1);
     }
 
 }

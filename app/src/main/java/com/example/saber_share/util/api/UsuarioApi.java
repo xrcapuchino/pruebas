@@ -12,7 +12,6 @@ import retrofit2.http.Query;
 
 public interface UsuarioApi {
 
-    // GET /Amaury/api/usuario?user=...
     @GET("usuario")
     Call<List<UsuarioDto>> login(
             @Query("user") String user
@@ -21,7 +20,6 @@ public interface UsuarioApi {
     @GET("usuario")
     Call<List<UsuarioDto>> BuscaCorreo(@Query("correo") String correo);
 
-    // POST /Amaury/api/usuario
     @POST("usuario")
     Call<UsuarioDto> registrar(
             @Body UsuarioDto usuario

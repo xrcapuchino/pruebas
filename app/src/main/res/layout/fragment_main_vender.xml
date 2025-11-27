@@ -63,15 +63,32 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilDescripcion"
+        android:id="@+id/tilDescripcion"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Descripción detallada"
+        android:layout_marginBottom="12dp">
+
+        <EditText
+            android:id="@+id/etDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="3"
+            android:gravity="top" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRequisitos"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Descripción detallada"
+            android:hint="Requisitos"
             android:layout_marginBottom="12dp">
 
             <EditText
-                android:id="@+id/etDescripcion"
+                android:id="@+id/etRequisitos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minLines="3"
@@ -142,7 +159,7 @@
         </LinearLayout>
 
         <Button
-            android:id="@+id/btnVender"
+            android:id="@+id/btnSiguiente"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
