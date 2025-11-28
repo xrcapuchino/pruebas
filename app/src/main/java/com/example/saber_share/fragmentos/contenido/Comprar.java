@@ -89,20 +89,21 @@ public class Comprar extends Fragment {
         });
     }
 
-    // Método para manejar el clic en una tarjeta
-    private void irADetalle(Publicacion publicacion) {
-        // Empaquetar los datos para enviarlos al Fragmento de Detalle
+    private void irADetalle(Publicacion p) {
         Bundle bundle = new Bundle();
-        bundle.putInt("idAutor", publicacion.getIdAutor()); // Necesitas asegurar que Publicacion tenga este getter
-        bundle.putString("titulo", publicacion.getTitulo());
-        bundle.putString("descripcion", publicacion.getDescripcion());
-        bundle.putDouble("precio", publicacion.getPrecio());
-        bundle.putString("autor", publicacion.getAutor());
+        bundle.putInt("idAutor", p.getIdAutor());
+        bundle.putString("tipo", p.getTipo());
+        bundle.putString("titulo", p.getTitulo());
+        bundle.putString("descripcion", p.getDescripcion());
+        bundle.putDouble("precio", p.getPrecio());
+        bundle.putString("autor", p.getAutor());
+        bundle.putString("calificacion", p.getCalificacion());
 
-        // Navegar al detalle (Asegúrate de tener esta acción en tu main_nav.xml)
-        // Si no tienes la acción creada aún, puedes usar el ID del destino directo
+        // IMPORTANTE: Pasar el campo extra
+        // (Asegúrate de haber agregado getExtra() a tu modelo Publicacion)
+        bundle.putString("extra", p.getImagenUrl()); // Usamos imagenUrl para guardar el archivo/requisito temporalmente
+
         Navigation.findNavController(requireView()).navigate(R.id.detallePublicacion, bundle);
-        // Nota: 'nav_detalle_publicacion' es el ID que le pondremos al fragmento DetallePublicacion en el nav graph
     }
 
     private void cargarDatos() {
@@ -123,6 +124,7 @@ public class Comprar extends Fragment {
                                 c.getPrecio(),
                                 c.getNombreUsuario(),
                                 c.getCalificacion(),
+                                c.getFoto(),
                                 null,
                                 c.getUsuarioId() // <--- PASAR ID DEL AUTOR (Agregado al constructor de Publicacion)
                         ));
@@ -153,6 +155,7 @@ public class Comprar extends Fragment {
                                 s.getDescripcion(),
                                 s.getPrecio(),
                                 s.getNombreUsuario(),
+                                s.getRequisitos(),
                                 "N/A",
                                 null,
                                 s.getUsuarioId() // <--- PASAR ID DEL AUTOR

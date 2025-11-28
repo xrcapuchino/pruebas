@@ -13,9 +13,10 @@ public class Publicacion {
     private String calificacion;
     private String imagenUrl;
     private int idAutor;
+    private String extraInfo;
 
     public Publicacion() {}
-    public Publicacion(String tipo, int idOriginal, String titulo, String descripcion, double precio, String autor, String calificacion, String imagenUrl, int idAutor) {
+    public Publicacion(String tipo, int idOriginal, String titulo, String descripcion, double precio, String autor, String calificacion, String imagenUrl,String extraInfo, int idAutor) {
         this.tipo = tipo;
         this.idOriginal = idOriginal;
         this.titulo = titulo;
@@ -25,6 +26,7 @@ public class Publicacion {
         this.calificacion = calificacion;
         this.imagenUrl = imagenUrl;
         this.idAutor = idAutor;
+        this.extraInfo = extraInfo;
     }
 
 
@@ -98,5 +100,13 @@ public class Publicacion {
 
     public void setIdAutor(int idAutor) {
         this.idAutor = idAutor;
+    }
+
+    public String getExtraInfo() {
+        return extraInfo;
+    }
+
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
     }
 }

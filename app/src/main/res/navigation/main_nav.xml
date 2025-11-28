@@ -37,7 +37,7 @@
     <include app:graph="@navigation/cuenta_nav" />
     <fragment
         android:id="@+id/resumenPublicacion"
-        android:name="com.example.saber_share.fragmentos.contenido.ResumenPublicacion"
+        android:name="com.example.saber_share.fragmentos.contenido.Publicacion.ResumenPublicacion"
         android:label="ResumenPublicacion" >
         <action
             android:id="@+id/action_resumenPublicacion_to_inicio"
@@ -45,8 +45,20 @@
     </fragment>
     <fragment
         android:id="@+id/detallePublicacion"
-        android:name="com.example.saber_share.fragmentos.contenido.DetallePublicacion"
-        android:label="DetallePublicacion" />
+        android:name="com.example.saber_share.fragmentos.contenido.Publicacion.DetallePublicacion"
+        android:label="DetallePublicacion" >
+        <action
+            android:id="@+id/action_detallePublicacion_to_editarPublicacion"
+            app:destination="@id/editarPublicacion" />
+    </fragment>
+    <fragment
+        android:id="@+id/editarPublicacion"
+        android:name="com.example.saber_share.fragmentos.contenido.EditarPublicacion"
+        android:label="EditarPublicacion" >
+        <action
+            android:id="@+id/action_editarPublicacion_to_inicio"
+            app:destination="@id/inicio" />
+    </fragment>
 
 
 </navigation>

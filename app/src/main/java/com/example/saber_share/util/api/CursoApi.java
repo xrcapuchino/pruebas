@@ -8,8 +8,11 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface CursoApi {
@@ -26,5 +29,10 @@ public interface CursoApi {
     @GET("curso")
     Call<List<CursoDto>> lista();
 
+    @PUT("curso/{id}")
+    Call<CursoDto> updateCurso(@Path("id") int id, @Body CursoDto curso);
+
+    @DELETE("curso/{id}")
+    Call<Void> deleteCurso(@Path("id") int id);
 
 }

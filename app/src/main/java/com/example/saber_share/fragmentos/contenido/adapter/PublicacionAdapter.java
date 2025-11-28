@@ -122,6 +122,7 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
         notifyDataSetChanged();
     }
 
+
     static class PublicacionViewHolder extends RecyclerView.ViewHolder {
         ImageView imgPortada;
         TextView tvTitulo, tvAutor, tvCalificacion, tvPrecio;

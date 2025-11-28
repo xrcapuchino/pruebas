@@ -1,4 +1,4 @@
-package com.example.saber_share.fragmentos.contenido;
+package com.example.saber_share.fragmentos.contenido.Publicacion;
 
 import android.os.Bundle;
 
