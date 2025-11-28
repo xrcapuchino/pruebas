@@ -23,11 +23,20 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
     private Context context;
     private List<Publicacion> listaOriginal;
     private List<Publicacion> listaFiltrada;
+    private int usuarioActualId; // <--- NUEVO: ID del usuario logueado
+    private OnItemClickListener listener; // Para manejar el click
 
-    public PublicacionAdapter(Context context, List<Publicacion> lista) {
+    // Interfaz para comunicar clicks al fragmento
+    public interface OnItemClickListener {
+        void onItemClick(Publicacion publicacion);
+    }
+
+    public PublicacionAdapter(Context context, List<Publicacion> lista, int usuarioActualId, OnItemClickListener listener) {
         this.context = context;
         this.listaOriginal = lista;
         this.listaFiltrada = new ArrayList<>(lista);
+        this.usuarioActualId = usuarioActualId;
+        this.listener = listener;
     }
 
     @NonNull
@@ -41,31 +50,47 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
     public void onBindViewHolder(@NonNull PublicacionViewHolder holder, int position) {
         Publicacion p = listaFiltrada.get(position);
 
-        // 1. Configurar Título con Prefijo (Curso: ... o Clase 1 a 1: ...)
         String prefijo = Publicacion.TIPO_CURSO.equals(p.getTipo()) ? "Curso: " : "Clase 1 a 1: ";
         holder.tvTitulo.setText(prefijo + p.getTitulo());
-
-        // 2. Configurar resto de datos
-        holder.tvAutor.setText("Por: " + (p.getAutor() != null ? p.getAutor() : "Anónimo"));
         holder.tvPrecio.setText(String.format("$ %.2f MXN", p.getPrecio()));
-
-        // Calificación (solo si existe, si no ponemos N/A)
         String calif = (p.getCalificacion() != null && !p.getCalificacion().equals("0")) ? p.getCalificacion() : "N/A";
         holder.tvCalificacion.setText(calif + " ★");
 
-        // 3. Configurar Imagen y Botón según el tipo
-        if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
-            holder.btnAccion.setText("Pagar");
-            holder.imgPortada.setImageResource(R.drawable.img); // Imagen default curso
+        // --- LÓGICA DE DUEÑO ---
+        // OJO: Aquí asumimos que 'Publicacion' tiene un método getAutorId().
+        // Si no lo tiene, necesitamos agregarlo al modelo Publicacion (ver Paso 1.1)
+        boolean esMio = p.getIdAutor() == usuarioActualId;
+
+        if (esMio) {
+            holder.tvAutor.setText("Hecho por ti");
+            holder.btnAccion.setText("Detalles");
+            holder.btnAccion.setBackgroundColor(context.getResources().getColor(android.R.color.darker_gray)); // Opcional: cambiar color
         } else {
-            holder.btnAccion.setText("Agendar");
-            holder.imgPortada.setImageResource(R.drawable.img_1); // Imagen default clase
+            holder.tvAutor.setText("Por: " + (p.getAutor() != null ? p.getAutor() : "Anónimo"));
+            if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
+                holder.btnAccion.setText("Pagar");
+            } else {
+                holder.btnAccion.setText("Agendar");
+            }
+            // Restaurar color original si es necesario
+            // holder.btnAccion.setBackgroundTintList(...);
         }
 
-        // 4. Click en el botón
+        // Imágenes dummy
+        if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
+            holder.imgPortada.setImageResource(R.drawable.img);
+        } else {
+            holder.imgPortada.setImageResource(R.drawable.img_1);
+        }
+
+        // Click en el botón (Acción principal)
         holder.btnAccion.setOnClickListener(v -> {
-            Toast.makeText(context, "Comprando: " + p.getTitulo(), Toast.LENGTH_SHORT).show();
-            // Aquí iría la navegación al detalle de la compra
+            if (listener != null) listener.onItemClick(p);
+        });
+
+        // Click en la tarjeta completa (también lleva a detalles)
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onItemClick(p);
         });
     }
 
@@ -81,6 +106,8 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
     }
 
     public void filtrar(String texto) {
+        // ... (tu lógica de filtrado igual) ...
+        // (Asegúrate de actualizar listaFiltrada y notifyDataSetChanged)
         if (texto.isEmpty()) {
             listaFiltrada = new ArrayList<>(listaOriginal);
         } else {

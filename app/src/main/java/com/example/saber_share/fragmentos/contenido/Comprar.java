@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +24,7 @@ import com.example.saber_share.model.ServicioDto;
 import com.example.saber_share.util.api.CursoApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
+import com.example.saber_share.util.local.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,7 @@ public class Comprar extends Fragment {
     private EditText etBuscar;
     private PublicacionAdapter adapter;
     private List<Publicacion> listaGlobal = new ArrayList<>();
+    private SessionManager sessionManager; // Variable para la sesión
 
     public Comprar() {}
 
@@ -49,12 +52,25 @@ public class Comprar extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        sessionManager = new SessionManager(requireContext()); // Inicializar sesión
+
         rvResultados = view.findViewById(R.id.rvResultadosBusqueda);
-        etBuscar = view.findViewById(R.id.etBuscarComprar); // Asegúrate que el ID en XML sea este
+        etBuscar = view.findViewById(R.id.etBuscarComprar);
 
         // Configurar RecyclerView
         rvResultados.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new PublicacionAdapter(getContext(), new ArrayList<>());
+
+        // OBTENER EL ID DEL USUARIO ACTUAL
+        int miId = sessionManager.getUserId();
+
+        // CREAR ADAPTER CON LOS 4 PARÁMETROS NUEVOS
+        adapter = new PublicacionAdapter(
+                getContext(),
+                new ArrayList<>(),
+                miId,
+                this::irADetalle // Referencia al método que maneja el clic
+        );
+
         rvResultados.setAdapter(adapter);
 
         // Cargar datos desde API
@@ -73,6 +89,22 @@ public class Comprar extends Fragment {
         });
     }
 
+    // Método para manejar el clic en una tarjeta
+    private void irADetalle(Publicacion publicacion) {
+        // Empaquetar los datos para enviarlos al Fragmento de Detalle
+        Bundle bundle = new Bundle();
+        bundle.putInt("idAutor", publicacion.getIdAutor()); // Necesitas asegurar que Publicacion tenga este getter
+        bundle.putString("titulo", publicacion.getTitulo());
+        bundle.putString("descripcion", publicacion.getDescripcion());
+        bundle.putDouble("precio", publicacion.getPrecio());
+        bundle.putString("autor", publicacion.getAutor());
+
+        // Navegar al detalle (Asegúrate de tener esta acción en tu main_nav.xml)
+        // Si no tienes la acción creada aún, puedes usar el ID del destino directo
+        Navigation.findNavController(requireView()).navigate(R.id.detallePublicacion, bundle);
+        // Nota: 'nav_detalle_publicacion' es el ID que le pondremos al fragmento DetallePublicacion en el nav graph
+    }
+
     private void cargarDatos() {
         listaGlobal.clear();
 
@@ -82,6 +114,7 @@ public class Comprar extends Fragment {
             public void onResponse(Call<List<CursoDto>> call, Response<List<CursoDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     for (CursoDto c : response.body()) {
+                        // Asegúrate de pasar el ID del autor aquí (c.getUsuarioId())
                         listaGlobal.add(new Publicacion(
                                 Publicacion.TIPO_CURSO,
                                 c.getIdCurso(),
@@ -90,19 +123,17 @@ public class Comprar extends Fragment {
                                 c.getPrecio(),
                                 c.getNombreUsuario(),
                                 c.getCalificacion(),
-                                null
+                                null,
+                                c.getUsuarioId() // <--- PASAR ID DEL AUTOR (Agregado al constructor de Publicacion)
                         ));
                     }
-                    // Actualizamos la lista (tendrá solo cursos por ahora)
                     adapter.setDatos(listaGlobal);
                 }
-                // Ahora cargamos servicios para agregarlos
                 cargarServicios();
             }
 
             @Override
             public void onFailure(Call<List<CursoDto>> call, Throwable t) {
-                // Si falla cursos, intentamos servicios igual
                 cargarServicios();
             }
         });
@@ -123,17 +154,16 @@ public class Comprar extends Fragment {
                                 s.getPrecio(),
                                 s.getNombreUsuario(),
                                 "N/A",
-                                null
+                                null,
+                                s.getUsuarioId() // <--- PASAR ID DEL AUTOR
                         ));
                     }
-                    // Actualizamos la lista final (Cursos + Servicios)
                     adapter.setDatos(listaGlobal);
                 }
             }
 
             @Override
             public void onFailure(Call<List<ServicioDto>> call, Throwable t) {
-                // Solo mostramos error si no hay nada en la lista
                 if(listaGlobal.isEmpty()) {
                     Toast.makeText(getContext(), "No se pudieron cargar las publicaciones", Toast.LENGTH_SHORT).show();
                 }
