@@ -41,7 +41,7 @@ public class EditarPublicacion extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            idPublicacion = getArguments().getInt("idOriginal"); // ID de la BD
+            idPublicacion = getArguments().getInt("idOriginal");
             tipo = getArguments().getString("tipo");
             titulo = getArguments().getString("titulo");
             descripcion = getArguments().getString("descripcion");
