@@ -39,7 +39,7 @@ public class Comprar extends Fragment {
     private EditText etBuscar;
     private PublicacionAdapter adapter;
     private List<Publicacion> listaGlobal = new ArrayList<>();
-    private SessionManager sessionManager; // Variable para la sesión
+    private SessionManager sessionManager;
 
     public Comprar() {}
 
@@ -52,7 +52,7 @@ public class Comprar extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        sessionManager = new SessionManager(requireContext()); // Inicializar sesión
+        sessionManager = new SessionManager(requireContext());
 
         rvResultados = view.findViewById(R.id.rvResultadosBusqueda);
         etBuscar = view.findViewById(R.id.etBuscarComprar);
@@ -91,6 +91,7 @@ public class Comprar extends Fragment {
 
     private void irADetalle(Publicacion p) {
         Bundle bundle = new Bundle();
+        bundle.putInt("idOriginal", p.getIdOriginal());
         bundle.putInt("idAutor", p.getIdAutor());
         bundle.putString("tipo", p.getTipo());
         bundle.putString("titulo", p.getTitulo());

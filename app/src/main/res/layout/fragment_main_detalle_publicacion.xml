@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header con Imagen (Tipo Airbnb/Udemy) -->
+        <!-- Header con Imagen -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="240dp">
@@ -145,7 +145,7 @@
                 android:background="#E0E0E0"
                 android:layout_marginVertical="20dp" />
 
-            <!-- ÁREA DE ACCIONES (La magia ocurre aquí) -->
+            <!-- ÁREA DE ACCIONES -->
 
             <!-- 1. Panel del DUEÑO -->
             <LinearLayout
@@ -179,6 +179,17 @@
                     android:layout_height="56dp"
                     android:text="Ver alumnos inscritos"
                     android:layout_marginTop="8dp"/>
+
+                <!-- BOTÓN ELIMINAR (¡AGREGADO!) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEliminar"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="Eliminar publicación"
+                    android:textColor="#D32F2F"
+                    app:strokeColor="#D32F2F"
+                    android:layout_marginTop="8dp"/>
             </LinearLayout>
 
             <!-- 2. Panel del CLIENTE (Antes de comprar) -->
@@ -204,7 +215,7 @@
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Contacta al profesor"
+                    android:text="Hacer una pregunta"
                     android:textColor="#2E70FF"/>
             </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.example.saber_share.fragmentos.contenido.Publicacion;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,16 +17,21 @@ import androidx.navigation.Navigation;
 
 import com.example.saber_share.R;
 import com.example.saber_share.model.Publicacion;
+import com.example.saber_share.util.api.CursoApi;
+import com.example.saber_share.util.api.RetrofitClient;
+import com.example.saber_share.util.api.ServicioApi;
 import com.example.saber_share.util.local.SessionManager;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DetallePublicacion extends Fragment {
 
     private int idAutor;
-    // Necesitamos guardar el ID original de la publicación para poder editarla
-    private int idOriginal;
-    private String tipo, titulo, descripcion, autor, extra;
+    private int idOriginal; // El ID real de la base de datos
+    private String tipo, titulo, descripcion, autor, extra, calificacion;
     private double precio;
-    private String calificacion;
 
     private SessionManager sessionManager;
 
@@ -33,16 +39,14 @@ public class DetallePublicacion extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            // Recibimos todos los datos del bundle
             idAutor = getArguments().getInt("idAutor");
-            // IMPORTANTE: Asegúrate de recibir el idOriginal desde el Adapter
             idOriginal = getArguments().getInt("idOriginal");
-            tipo = getArguments().getString("tipo"); // CURSO o CLASE
+            tipo = getArguments().getString("tipo");
             titulo = getArguments().getString("titulo");
             descripcion = getArguments().getString("descripcion");
             precio = getArguments().getDouble("precio");
             autor = getArguments().getString("autor");
-            extra = getArguments().getString("extra"); // Archivo o Requisitos
+            extra = getArguments().getString("extra");
             calificacion = getArguments().getString("calificacion");
         }
     }
@@ -65,7 +69,6 @@ public class DetallePublicacion extends Fragment {
         ((TextView) view.findViewById(R.id.tvDetalleAutor)).setText(autor);
         ((TextView) view.findViewById(R.id.tvDetalleCalif)).setText(calificacion + " ★");
 
-        // Mostrar Archivo o Requisitos según tipo
         TextView tvLabelExtra = view.findViewById(R.id.tvLabelExtra);
         TextView tvExtra = view.findViewById(R.id.tvDetalleExtra);
 
@@ -77,11 +80,10 @@ public class DetallePublicacion extends Fragment {
             tvExtra.setText(extra != null ? extra : "Sin requisitos");
         }
 
-        // 2. Lógica de Roles (Paneles)
+        // 2. Control de Paneles (Dueño vs Cliente)
         LinearLayout panelDueno = view.findViewById(R.id.panelDueno);
         LinearLayout panelCliente = view.findViewById(R.id.panelClienteCompra);
         LinearLayout panelAlumno = view.findViewById(R.id.panelAlumnoAcceso);
-
         Button btnAccion = view.findViewById(R.id.btnAccionPrincipal);
 
         view.findViewById(R.id.fabAtras).setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
@@ -91,67 +93,99 @@ public class DetallePublicacion extends Fragment {
             panelDueno.setVisibility(View.VISIBLE);
             panelCliente.setVisibility(View.GONE);
             panelAlumno.setVisibility(View.GONE);
-
             configurarPanelDueno(view);
         } else {
-            // SOY CLIENTE (Lógica simplificada por ahora)
-            boolean yaComprado = false; // Aquí iría la consulta a la API de historial
+            // SOY CLIENTE
+            panelDueno.setVisibility(View.GONE);
+            // Aquí podrías validar si ya compró el curso usando otra API
+            panelCliente.setVisibility(View.VISIBLE);
+            panelAlumno.setVisibility(View.GONE);
 
-            if (yaComprado) {
-                panelAlumno.setVisibility(View.VISIBLE);
-                panelCliente.setVisibility(View.GONE);
-                configurarPanelAlumno(view);
+            if (Publicacion.TIPO_CURSO.equals(tipo)) {
+                btnAccion.setText("Comprar Curso - " + String.format("$ %.2f", precio));
+                btnAccion.setOnClickListener(v -> iniciarCompra());
             } else {
-                panelCliente.setVisibility(View.VISIBLE);
-                panelAlumno.setVisibility(View.GONE);
-
-                if (Publicacion.TIPO_CURSO.equals(tipo)) {
-                    btnAccion.setText("Comprar Curso - " + String.format("$ %.2f", precio));
-                    btnAccion.setOnClickListener(v -> iniciarCompra());
-                } else {
-                    btnAccion.setText("Agendar Clase");
-                    btnAccion.setOnClickListener(v -> irAAgenda());
-                }
+                btnAccion.setText("Agendar Clase");
+                btnAccion.setOnClickListener(v -> irAAgenda());
             }
         }
     }
 
     private void configurarPanelDueno(View view) {
-        // Lógica para el botón "Editar"
+        // Botón Editar
         view.findViewById(R.id.btnEditarCurso).setOnClickListener(v -> {
-            // Preparamos el paquete para enviar al fragmento de edición
             Bundle bundle = new Bundle();
-            bundle.putInt("idOriginal", idOriginal); // ID para el PUT en la API
+            bundle.putInt("idOriginal", idOriginal);
             bundle.putString("tipo", tipo);
             bundle.putString("titulo", titulo);
             bundle.putString("descripcion", descripcion);
             bundle.putDouble("precio", precio);
             bundle.putString("extra", extra);
-
-            // Navegamos al fragmento de edición (Asegúrate de tener esta acción en main_nav.xml)
             Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_editarPublicacion, bundle);
         });
+
+        // Botón Eliminar (NUEVO)
+        view.findViewById(R.id.btnEliminar).setOnClickListener(v -> mostrarDialogoConfirmacion());
 
         view.findViewById(R.id.btnVerAlumnos).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Ver lista de alumnos (Próximamente)", Toast.LENGTH_SHORT).show());
     }
 
-    private void configurarPanelAlumno(View view) {
-        view.findViewById(R.id.btnVerContenido).setOnClickListener(v -> {
-            if (Publicacion.TIPO_CURSO.equals(tipo)) {
-                Toast.makeText(getContext(), "Abriendo archivo: " + extra, Toast.LENGTH_LONG).show();
-                // Aquí lanzaríamos un Intent para abrir el PDF/Video
-            }
-        });
+    private void mostrarDialogoConfirmacion() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Eliminar Publicación")
+                .setMessage("¿Estás seguro de que deseas eliminar esto? Esta acción no se puede deshacer.")
+                .setPositiveButton("Eliminar", (dialog, which) -> ejecutarEliminacion())
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
+    private void ejecutarEliminacion() {
+        if (Publicacion.TIPO_CURSO.equals(tipo)) {
+            // Borrar Curso
+            CursoApi api = RetrofitClient.getClient().create(CursoApi.class);
+            api.deleteCurso(idOriginal).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "Curso eliminado correctamente", Toast.LENGTH_SHORT).show();
+                        Navigation.findNavController(requireView()).popBackStack(); // Regresa a la lista
+                    } else {
+                        Toast.makeText(getContext(), "Error al eliminar: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            // Borrar Servicio
+            ServicioApi api = RetrofitClient.getClient().create(ServicioApi.class);
+            api.deleteServicio(idOriginal).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getContext(), "Clase eliminada correctamente", Toast.LENGTH_SHORT).show();
+                        Navigation.findNavController(requireView()).popBackStack(); // Regresa a la lista
+                    } else {
+                        Toast.makeText(getContext(), "Error al eliminar: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
+    // Métodos de cliente (placeholders)
     private void iniciarCompra() {
         Toast.makeText(getContext(), "Iniciando pasarela de pago...", Toast.LENGTH_SHORT).show();
-        // Navegar a fragmento de pago
     }
 
     private void irAAgenda() {
         Toast.makeText(getContext(), "Abriendo calendario...", Toast.LENGTH_SHORT).show();
-        // Navegar a fragmento de agenda
     }
 }

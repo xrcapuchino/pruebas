@@ -59,7 +59,6 @@ public class EditarPublicacion extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         sessionManager = new SessionManager(requireContext());
-
         etTitulo = view.findViewById(R.id.etEditTitulo);
         etDescripcion = view.findViewById(R.id.etEditDescripcion);
         etPrecio = view.findViewById(R.id.etEditPrecio);
@@ -121,10 +120,24 @@ public class EditarPublicacion extends Fragment {
             public void onResponse(Call<CursoDto> call, Response<CursoDto> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "¡Actualizado!", Toast.LENGTH_SHORT).show();
-                    // Volver al inicio para refrescar
-                    Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_inicio);
+
+                    // PREPARAMOS EL REGRESO AL DETALLE
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("idOriginal", idPublicacion);
+                    bundle.putInt("idAutor", userId); // El usuario actual es el autor
+                    bundle.putString("tipo", "CURSO");
+
+                    // Pasamos los datos NUEVOS que acabamos de enviar
+                    bundle.putString("titulo", etTitulo.getText().toString());
+                    bundle.putString("descripcion", etDescripcion.getText().toString());
+                    bundle.putDouble("precio", Double.parseDouble(etPrecio.getText().toString()));
+                    bundle.putString("extra", etExtra.getText().toString());
+                    bundle.putString("autor", "Tu (Editado)"); // O mantenemos el nombre original si lo tienes guardado
+                    bundle.putString("calificacion", "0"); // O la original
+
+                    Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_detallePublicacion, bundle);
                 } else {
-                    mostrarError("Error al actualizar");
+                    mostrarError("Error al actualizar1");
                 }
             }
             @Override
@@ -152,9 +165,22 @@ public class EditarPublicacion extends Fragment {
             public void onResponse(Call<ServicioDto> call, Response<ServicioDto> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "¡Actualizado!", Toast.LENGTH_SHORT).show();
-                    Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_inicio);
+
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("idOriginal", idPublicacion);
+                    bundle.putInt("idAutor", userId);
+                    bundle.putString("tipo", "CLASE");
+
+                    bundle.putString("titulo", etTitulo.getText().toString());
+                    bundle.putString("descripcion", etDescripcion.getText().toString());
+                    bundle.putDouble("precio", Double.parseDouble(etPrecio.getText().toString()));
+                    bundle.putString("extra", etExtra.getText().toString());
+                    bundle.putString("autor", "Tu (Editado)");
+                    bundle.putString("calificacion", "N/A");
+
+                    Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_detallePublicacion, bundle);
                 } else {
-                    mostrarError("Error al actualizar");
+                    mostrarError("Error al actualizar2");
                 }
             }
             @Override
