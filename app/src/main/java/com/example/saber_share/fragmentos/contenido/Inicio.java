@@ -10,11 +10,6 @@ import android.view.ViewGroup;
 
 import com.example.saber_share.R;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link Inicio#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class Inicio extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
