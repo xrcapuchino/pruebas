@@ -72,24 +72,20 @@ public class Perfil extends Fragment {
         etNombrePub.setText(usuarioEjemplo);
         etCorreoPub.setText(correoEjemplo);
 
-        // 3. Configurar Botones
         btnCerrarSesion.setOnClickListener(v -> sessionManager.logoutUser());
 
-        // Navegación a Tarjetas (LO IMPORTANTE AHORA)
         btnGestionarTarjetas.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_perfil_to_administrarTarjetas)
         );
 
-        // Navegación a Historial / Estadísticas (Pendientes para futuros módulos)
-        btnHistorial.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Módulo Historial pendiente", Toast.LENGTH_SHORT).show()
-        );
+        btnHistorial.setOnClickListener(v -> {
+            Navigation.findNavController(v).navigate(R.id.action_perfil_to_historial);
+        });
 
         btnEstadisticas.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Módulo Estadísticas pendiente", Toast.LENGTH_SHORT).show()
         );
 
-        // 4. Cargar resumen de tarjetas (Opcional pero recomendado para UX)
         verificarTarjetas(userId);
     }
 

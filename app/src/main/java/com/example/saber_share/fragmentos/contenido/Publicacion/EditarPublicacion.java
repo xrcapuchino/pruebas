@@ -137,7 +137,7 @@ public class EditarPublicacion extends Fragment {
 
                     Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_detallePublicacion, bundle);
                 } else {
-                    mostrarError("Error al actualizar1");
+                    mostrarError("Error al actualizar 1");
                 }
             }
             @Override
@@ -180,7 +180,7 @@ public class EditarPublicacion extends Fragment {
 
                     Navigation.findNavController(requireView()).navigate(R.id.action_editarPublicacion_to_detallePublicacion, bundle);
                 } else {
-                    mostrarError("Error al actualizar2");
+                    mostrarError("Error al actualizar 2");
                 }
             }
             @Override

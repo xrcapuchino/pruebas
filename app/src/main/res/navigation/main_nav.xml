@@ -23,6 +23,9 @@
         <action
             android:id="@+id/action_perfil_to_administrarTarjetas"
             app:destination="@id/administrarTarjetas" />
+        <action
+            android:id="@+id/action_perfil_to_historial"
+            app:destination="@id/historial" />
     </fragment>
     <fragment
         android:id="@+id/vender"
@@ -56,6 +59,9 @@
         <action
             android:id="@+id/action_detallePublicacion_to_editarPublicacion"
             app:destination="@id/editarPublicacion" />
+        <action
+            android:id="@+id/action_detallePublicacion_to_agendarClase"
+            app:destination="@id/agendarClase" />
     </fragment>
     <fragment
         android:id="@+id/editarPublicacion"
@@ -88,6 +94,16 @@
         android:label="AgregarTarjeta"
         tools:layout="@layout/fragment_main_agregar_tarjeta"
         />
+    <fragment
+        android:id="@+id/historial"
+        android:name="com.example.saber_share.fragmentos.contenido.Historial"
+        tools:layout="@layout/fragment_main_historial"
+        android:label="Historial" />
+    <fragment
+        android:id="@+id/agendarClase"
+        android:name="com.example.saber_share.fragmentos.contenido.AgendarClase"
+        tools:layout="@layout/fragment_main_agendar_clase"
+        android:label="AgendarClase" />
 
 
 </navigation>

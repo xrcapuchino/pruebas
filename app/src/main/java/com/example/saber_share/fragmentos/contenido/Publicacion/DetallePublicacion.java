@@ -16,11 +16,17 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.example.saber_share.R;
+import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
 import com.example.saber_share.util.api.CursoApi;
+import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
 import com.example.saber_share.util.local.SessionManager;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -72,6 +78,7 @@ public class DetallePublicacion extends Fragment {
         TextView tvLabelExtra = view.findViewById(R.id.tvLabelExtra);
         TextView tvExtra = view.findViewById(R.id.tvDetalleExtra);
 
+        // Ajustar textos según tipo
         if (Publicacion.TIPO_CURSO.equals(tipo)) {
             tvLabelExtra.setText("Archivo del curso:");
             tvExtra.setText(extra != null ? extra : "No disponible");
@@ -95,9 +102,9 @@ public class DetallePublicacion extends Fragment {
             panelAlumno.setVisibility(View.GONE);
             configurarPanelDueno(view);
         } else {
-            // SOY CLIENTE
+            // SOY CLIENTE (O ALUMNO)
             panelDueno.setVisibility(View.GONE);
-            // Aquí podrías validar si ya compró el curso usando otra API
+            // TODO: Aquí idealmente verificarías con la API si el usuario ya compró para mostrar panelAlumno
             panelCliente.setVisibility(View.VISIBLE);
             panelAlumno.setVisibility(View.GONE);
 
@@ -105,12 +112,13 @@ public class DetallePublicacion extends Fragment {
                 btnAccion.setText("Comprar Curso - " + String.format("$ %.2f", precio));
                 btnAccion.setOnClickListener(v -> iniciarCompra());
             } else {
-                btnAccion.setText("Agendar Clase");
+                btnAccion.setText("Ver Horarios Disponibles");
                 btnAccion.setOnClickListener(v -> irAAgenda());
             }
         }
     }
 
+    // --- LOGICA DEL DUEÑO ---
     private void configurarPanelDueno(View view) {
         view.findViewById(R.id.btnEditarCurso).setOnClickListener(v -> {
             Bundle bundle = new Bundle();
@@ -120,6 +128,10 @@ public class DetallePublicacion extends Fragment {
             bundle.putString("descripcion", descripcion);
             bundle.putDouble("precio", precio);
             bundle.putString("extra", extra);
+
+            // Pasamos fecha/hora si existen (para evitar el bug que corregimos antes)
+            // bundle.putString("fecha", ...);
+
             Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_editarPublicacion, bundle);
         });
 
@@ -145,10 +157,10 @@ public class DetallePublicacion extends Fragment {
                 @Override
                 public void onResponse(Call<Void> call, Response<Void> response) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Curso eliminado correctamente", Toast.LENGTH_SHORT).show();
-                        Navigation.findNavController(requireView()).popBackStack(); // Regresa a la lista
+                        Toast.makeText(getContext(), "Curso eliminado", Toast.LENGTH_SHORT).show();
+                        Navigation.findNavController(requireView()).popBackStack();
                     } else {
-                        Toast.makeText(getContext(), "Error al eliminar: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
                     }
                 }
                 @Override
@@ -157,16 +169,15 @@ public class DetallePublicacion extends Fragment {
                 }
             });
         } else {
-            // Borrar Servicio
             ServicioApi api = RetrofitClient.getClient().create(ServicioApi.class);
             api.deleteServicio(idOriginal).enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(Call<Void> call, Response<Void> response) {
                     if (response.isSuccessful()) {
-                        Toast.makeText(getContext(), "Clase eliminada correctamente", Toast.LENGTH_SHORT).show();
-                        Navigation.findNavController(requireView()).popBackStack(); // Regresa a la lista
+                        Toast.makeText(getContext(), "Clase eliminada", Toast.LENGTH_SHORT).show();
+                        Navigation.findNavController(requireView()).popBackStack();
                     } else {
-                        Toast.makeText(getContext(), "Error al eliminar: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
                     }
                 }
                 @Override
@@ -177,12 +188,53 @@ public class DetallePublicacion extends Fragment {
         }
     }
 
-    // Métodos de cliente (placeholders)
+    // --- LOGICA DEL CLIENTE (COMPRAR CURSO) ---
     private void iniciarCompra() {
-        Toast.makeText(getContext(), "Iniciando pasarela de pago...", Toast.LENGTH_SHORT).show();
+        new AlertDialog.Builder(getContext())
+                .setTitle("Confirmar Compra")
+                .setMessage("¿Deseas comprar el curso '" + titulo + "' por $" + precio + "?")
+                .setPositiveButton("Comprar", (dialog, which) -> realizarPagoCurso())
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
+    private void realizarPagoCurso() {
+        HistorialDto compra = new HistorialDto();
+        compra.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        compra.setPago(precio);
+        compra.setUsuarioId(sessionManager.getUserId());
+        compra.setCursoId(idOriginal); // Importante: ID del curso
+
+        HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
+        api.crear(compra).enqueue(new Callback<HistorialDto>() {
+            @Override
+            public void onResponse(Call<HistorialDto> call, Response<HistorialDto> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "¡Compra exitosa!", Toast.LENGTH_LONG).show();
+                    // Opcional: Cambiar visibilidad de paneles aquí para mostrar "Acceder al contenido"
+                    requireView().findViewById(R.id.panelClienteCompra).setVisibility(View.GONE);
+                    requireView().findViewById(R.id.panelAlumnoAcceso).setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(getContext(), "Error en la compra: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<HistorialDto> call, Throwable t) {
+                Toast.makeText(getContext(), "Fallo de red", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // --- LOGICA DEL CLIENTE (AGENDAR CLASE) ---
     private void irAAgenda() {
-        Toast.makeText(getContext(), "Abriendo calendario...", Toast.LENGTH_SHORT).show();
+        Bundle bundle = new Bundle();
+        bundle.putInt("servicioId", idOriginal);
+        bundle.putInt("profesorId", idAutor);
+        bundle.putString("titulo", titulo);
+
+        // Navegamos al fragmento AgendarClase que creamos anteriormente
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_detallePublicacion_to_agendarClase, bundle);
     }
 }

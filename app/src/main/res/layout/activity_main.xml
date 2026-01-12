@@ -15,6 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="50dp"
         app:layout_constraintBottom_toTopOf="@id/navCard" />
 
     <com.google.android.material.card.MaterialCardView
