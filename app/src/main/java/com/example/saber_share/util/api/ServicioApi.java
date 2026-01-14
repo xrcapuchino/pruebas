@@ -16,6 +16,7 @@ public interface ServicioApi {
 
     @GET("servicio")
     Call<List<ServicioDto>> lista();
+
     @POST("servicio")
     Call<ServicioDto> crearServicio(@Body ServicioDto servicio);
     @PUT("servicio/{id}")

@@ -9,6 +9,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface HistorialApi {
 
@@ -30,4 +31,13 @@ public interface HistorialApi {
 
     @GET("historial/curso/{idCurso}")
     Call<List<HistorialDto>> getAlumnosPorCurso(@Path("idCurso") int idCurso);
+
+    // Verificar si el usuario ya compró un curso específico
+    // GET /historial/verificar?usuarioId=X&cursoId=Y
+    @GET("historial/verificar")
+    Call<Boolean> verificarCompra(
+            @Query("usuarioId") int usuarioId,
+            @Query("cursoId") Integer cursoId,
+            @Query("servicioId") Integer servicioId
+    );
 }

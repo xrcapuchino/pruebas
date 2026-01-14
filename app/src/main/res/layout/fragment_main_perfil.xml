@@ -153,16 +153,29 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre público"
+            android:hint="Nombre"
             android:layout_marginBottom="12dp">
 
             <EditText
                 android:id="@+id/etNombrePublico"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false" />
+                android:enabled="true" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Apellido"
+            android:layout_marginBottom="12dp">
+
+            <EditText
+                android:id="@+id/etApellidoPublico"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="true" />
+        </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -174,8 +187,18 @@
                 android:id="@+id/etCorreoPublico"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false" />
+                android:enabled="true" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnGuardarPerfil"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Guardar Cambios"
+            app:backgroundTint="#4CAF50"
+            app:cornerRadius="16dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="visible"/>
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
