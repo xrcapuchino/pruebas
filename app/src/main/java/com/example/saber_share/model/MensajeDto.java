@@ -1,32 +1,34 @@
 package com.example.saber_share.model;
 
-import java.util.Date;
-
 public class MensajeDto {
-    private int idMensaje;
+    private Integer idMensaje;
     private String contenido;
-    private String fecha; // Lo manejaremos como String para simplificar en la vista
+    private String fechaEnvio; // Antes era "fecha"
+
+    // Ahora usamos objetos completos para saber nombre del remitente
     private UsuarioDto remitente;
     private UsuarioDto destinatario;
 
-    // Constructor vacío
     public MensajeDto() {}
 
-    // Constructor para enviar (a veces solo ocupamos IDs, pero este sirve para recibir)
-    public MensajeDto(String contenido, UsuarioDto remitente, UsuarioDto destinatario) {
+    // Constructor rápido para enviar
+    public MensajeDto(String contenido, Integer idRemitente, Integer idDestinatario) {
         this.contenido = contenido;
-        this.remitente = remitente;
-        this.destinatario = destinatario;
+        this.remitente = new UsuarioDto();
+        this.remitente.setIdUsuario(idRemitente);
+        this.destinatario = new UsuarioDto();
+        this.destinatario.setIdUsuario(idDestinatario);
     }
 
-    public int getIdMensaje() { return idMensaje; }
-    public void setIdMensaje(int idMensaje) { this.idMensaje = idMensaje; }
+    // Getters y Setters
+    public Integer getIdMensaje() { return idMensaje; }
+    public void setIdMensaje(Integer idMensaje) { this.idMensaje = idMensaje; }
 
     public String getContenido() { return contenido; }
     public void setContenido(String contenido) { this.contenido = contenido; }
 
-    public String getFecha() { return fecha; }
-    public void setFecha(String fecha) { this.fecha = fecha; }
+    public String getFechaEnvio() { return fechaEnvio; }
+    public void setFechaEnvio(String fechaEnvio) { this.fechaEnvio = fechaEnvio; }
 
     public UsuarioDto getRemitente() { return remitente; }
     public void setRemitente(UsuarioDto remitente) { this.remitente = remitente; }

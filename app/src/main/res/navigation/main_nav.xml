@@ -144,8 +144,8 @@
     <fragment
         android:id="@+id/misClases"
         android:name="com.example.saber_share.fragmentos.contenido.MisClases"
-        tools:layout="@layout/fragment_main_agregar_tarjeta"
-        android:label="MisClases" />
+        android:label="Mis Clases"
+        tools:layout="@layout/fragment_main_agendar_clase" />
     <fragment
         android:id="@+id/verAlumnos"
         android:name="com.example.saber_share.fragmentos.contenido.VerAlumnos"

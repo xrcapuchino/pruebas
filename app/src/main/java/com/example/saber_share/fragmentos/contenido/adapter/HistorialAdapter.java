@@ -27,26 +27,47 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        HistorialDto item = lista.get(position);
-        // Lógica: Mostrar nombre del curso o servicio según lo que venga
-        String titulo = (item.getTituloCurso() != null) ? item.getTituloCurso() :
-                (item.getTituloServicio() != null ? item.getTituloServicio() : "Compra sin título");
+        HistorialDto h = lista.get(position);
 
-        holder.tvTitulo.setText(titulo);
-        holder.tvFecha.setText(item.getFechapago());
-        holder.tvPrecio.setText("$" + item.getPago());
+        String titulo = "Sin título";
+        String tipo = "Compra";
+
+        // Lógica de títulos robusta (evita nulos)
+        if (h.getCursoId() != null) {
+            titulo = h.getTituloCurso() != null ? h.getTituloCurso() : "Curso #" + h.getCursoId();
+            tipo = "Curso";
+        } else if (h.getServicioId() != null) {
+            titulo = h.getTituloServicio() != null ? h.getTituloServicio() : "Clase #" + h.getServicioId();
+            tipo = "Clase 1:1";
+        }
+
+        // Asignaciones seguras
+        if (holder.tvTitulo != null) holder.tvTitulo.setText(titulo);
+
+        if (holder.tvFecha != null) {
+            holder.tvFecha.setText(h.getFechapago() != null ? h.getFechapago() : "Fecha desc.");
+        }
+
+        if (holder.tvPrecio != null) {
+            holder.tvPrecio.setText(String.format("$ %.2f", h.getPago() != null ? h.getPago() : 0.0));
+        }
+
+        if (holder.tvTipo != null) holder.tvTipo.setText(tipo);
     }
 
     @Override
-    public int getItemCount() { return lista.size(); }
+    public int getItemCount() { return lista != null ? lista.size() : 0; }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitulo, tvFecha, tvPrecio;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvTitulo, tvFecha, tvPrecio, tvTipo;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvTitulo = itemView.findViewById(R.id.tvTituloHistorial);
-            tvFecha = itemView.findViewById(R.id.tvFechaHistorial);
-            tvPrecio = itemView.findViewById(R.id.tvPrecioHistorial);
+            // Estos IDs deben coincidir EXACTAMENTE con el XML de arriba
+            tvTitulo = itemView.findViewById(R.id.tvHistorialTitulo);
+            tvFecha = itemView.findViewById(R.id.tvHistorialFecha);
+            tvPrecio = itemView.findViewById(R.id.tvHistorialPrecio);
+            tvTipo = itemView.findViewById(R.id.tvHistorialTipo);
         }
     }
 }

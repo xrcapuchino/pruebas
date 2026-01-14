@@ -97,11 +97,9 @@ public class Perfil extends Fragment {
 
         if(btnVerAgenda != null)
             btnVerAgenda.setOnClickListener(v -> {
-                // Navegar a la agenda personal del usuario (si es profesor)
-                Bundle b = new Bundle();
-                b.putInt("profesorId", miId);
-                // Asegúrate de tener la acción o destino correcto
-                Navigation.findNavController(v).navigate(R.id.gestionarAgenda, b);
+                // Antes iba a gestionarAgenda (Teacher View)
+                // Ahora va a misClases (Student/User View)
+                Navigation.findNavController(v).navigate(R.id.misClases);
             });
 
         if(btnGestionarTarjetas != null)

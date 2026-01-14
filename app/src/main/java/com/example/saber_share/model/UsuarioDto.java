@@ -3,8 +3,7 @@ package com.example.saber_share.model;
 import com.google.gson.annotations.SerializedName;
 
 public class UsuarioDto {
-    // IMPORTANTE: SerializedName asegura que JSON viaje como "idUsuario"
-    @SerializedName("idUsuario")
+    @SerializedName(value = "idUsuario", alternate = {"id", "usuarioId"})
     private Integer idUsuario;
 
     private String user;
@@ -14,6 +13,7 @@ public class UsuarioDto {
     private String correo;
     private String telefono;
 
+    // Getters seguros
     public Integer getIdUsuario() { return idUsuario; }
     public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
 

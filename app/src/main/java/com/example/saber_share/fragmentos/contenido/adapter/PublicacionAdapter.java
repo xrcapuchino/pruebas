@@ -14,10 +14,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.saber_share.R;
+import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.PublicacionViewHolder> {
 
@@ -26,6 +29,9 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
     private List<Publicacion> listaFiltrada;
     private int usuarioActualId;
     private OnItemClickListener listener;
+
+    private Set<Integer> cursosComprados = new HashSet<>();
+    private Set<Integer> serviciosComprados = new HashSet<>();
 
     public interface OnItemClickListener {
         void onItemClick(Publicacion publicacion);
@@ -37,6 +43,23 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
         this.listaFiltrada = new ArrayList<>(lista);
         this.usuarioActualId = usuarioActualId;
         this.listener = listener;
+    }
+
+    // CORRECCIÓN: Usamos getCursoId() directo
+    public void setCompras(List<HistorialDto> historial) {
+        cursosComprados.clear();
+        serviciosComprados.clear();
+        if (historial != null) {
+            for (HistorialDto h : historial) {
+                if (h.getCursoId() != null) {
+                    cursosComprados.add(h.getCursoId());
+                }
+                if (h.getServicioId() != null) {
+                    serviciosComprados.add(h.getServicioId());
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -52,28 +75,28 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
 
         String prefijo = Publicacion.TIPO_CURSO.equals(p.getTipo()) ? "Curso: " : "Clase 1 a 1: ";
         holder.tvTitulo.setText(prefijo + p.getTitulo());
-
-        // Formatear precio
         holder.tvPrecio.setText(String.format("$ %.2f MXN", p.getPrecio()));
-
-        // Validar calificación
         String calif = (p.getCalificacion() != null && !p.getCalificacion().equals("0")) ? p.getCalificacion() : "N/A";
         holder.tvCalificacion.setText(calif + " ★");
 
-        // --- LÓGICA DE BOTONES Y COLORES ---
         boolean esMio = p.getIdAutor() == usuarioActualId;
+        boolean comprado = false;
+        if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
+            comprado = cursosComprados.contains(p.getIdOriginal());
+        } else {
+            comprado = serviciosComprados.contains(p.getIdOriginal());
+        }
 
         if (esMio) {
-            // Caso 1: Es mi publicación
             holder.tvAutor.setText("Hecho por ti");
             holder.btnAccion.setText("Gestionar");
-            // Cambiar color a GRIS
             holder.btnAccion.setBackgroundTintList(ColorStateList.valueOf(Color.GRAY));
-        } else {
-            // Caso 2: Es de otro usuario
+        } else if (comprado) {
             holder.tvAutor.setText("Por: " + (p.getAutor() != null ? p.getAutor() : "Anónimo"));
-
-            // Restaurar color original (AZUL #2E70FF)
+            holder.btnAccion.setText("Ver");
+            holder.btnAccion.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+        } else {
+            holder.tvAutor.setText("Por: " + (p.getAutor() != null ? p.getAutor() : "Anónimo"));
             holder.btnAccion.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#2E70FF")));
 
             if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
@@ -83,19 +106,16 @@ public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.
             }
         }
 
-        // Imágenes dummy (puedes mejorarlo luego con Glide/Picasso)
         if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
             holder.imgPortada.setImageResource(R.drawable.img);
         } else {
             holder.imgPortada.setImageResource(R.drawable.img_1);
         }
 
-        // Click en el botón
         holder.btnAccion.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(p);
         });
 
-        // Click en la tarjeta
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onItemClick(p);
         });

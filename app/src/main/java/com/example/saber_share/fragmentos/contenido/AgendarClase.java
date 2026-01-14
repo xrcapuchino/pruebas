@@ -65,7 +65,7 @@ public class AgendarClase extends Fragment {
             servicioId = getArguments().getInt("servicioId", -1);
             tituloServicio = getArguments().getString("titulo", "Clase");
             precioClase = getArguments().getDouble("precio", 0.0);
-            profesorId = getArguments().getInt("profesorId", -1); // Importante recuperarlo
+            profesorId = getArguments().getInt("profesorId", -1);
 
             tvSubtitulo.setText("Horarios para: " + tituloServicio);
         }
@@ -117,7 +117,6 @@ public class AgendarClase extends Fragment {
                 .show();
     }
 
-    // LÓGICA UNIFICADA: Reserva API -> Guarda Historial -> Sale
     private void realizarReserva(AgendaDto slot) {
         int miIdAlumno = sessionManager.getUserId();
         if(miIdAlumno == profesorId) {
@@ -130,7 +129,6 @@ public class AgendarClase extends Fragment {
             @Override
             public void onResponse(Call<AgendaDto> call, Response<AgendaDto> response) {
                 if (response.isSuccessful()) {
-                    // ÉXITO EN RESERVA: AHORA GUARDAMOS EN HISTORIAL
                     guardarEnHistorial(slot);
                 } else {
                     mostrarMensaje("Error al reservar: " + response.code());
@@ -148,21 +146,19 @@ public class AgendarClase extends Fragment {
         historial.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         historial.setPago(precioClase);
         historial.setUsuarioId(sessionManager.getUserId());
+
+        // CORRECCIÓN: Usamos setServicioId() directamente
         historial.setServicioId(servicioId);
-        historial.setCursoId(null); // Es null porque es una clase (servicio)
+        historial.setCursoId(null);
 
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
         api.crear(historial).enqueue(new Callback<HistorialDto>() {
             @Override
             public void onResponse(Call<HistorialDto> call, Response<HistorialDto> response) {
-                // Independientemente de si el historial se guarda bien o mal, la reserva ya está hecha.
-                // Notificamos al usuario y salimos.
                 Toast.makeText(getContext(), "¡Clase Agendada Exitosamente!", Toast.LENGTH_LONG).show();
                 try {
                     Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
-                } catch (Exception e) {
-                    // Por si acaso la vista ya no existe
-                }
+                } catch (Exception e) {}
             }
 
             @Override

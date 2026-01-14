@@ -62,8 +62,6 @@ public class Inicio extends Fragment {
         int miId = sessionManager.getUserId();
 
         tvSaludo = view.findViewById(R.id.tvSaludo);
-
-        // Layouts contenedores para ocultar/mostrar
         layoutProximas = view.findViewById(R.id.layoutProximasClases);
         layoutContinuar = view.findViewById(R.id.layoutContinuarCursos);
         cgFiltros = view.findViewById(R.id.cgFiltrosInicio);
@@ -92,22 +90,23 @@ public class Inicio extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.comprar)
         );
 
-        // --- LÓGICA DE FILTROS ---
-        cgFiltros.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) return;
-            int id = checkedIds.get(0);
+        if(cgFiltros != null) {
+            cgFiltros.setOnCheckedStateChangeListener((group, checkedIds) -> {
+                if (checkedIds.isEmpty()) return;
+                int id = checkedIds.get(0);
 
-            if (id == R.id.chipTodos) {
-                layoutProximas.setVisibility(View.VISIBLE);
-                layoutContinuar.setVisibility(View.VISIBLE);
-            } else if (id == R.id.chipCursos) {
-                layoutProximas.setVisibility(View.GONE);
-                layoutContinuar.setVisibility(View.VISIBLE);
-            } else if (id == R.id.chipClases) {
-                layoutProximas.setVisibility(View.VISIBLE);
-                layoutContinuar.setVisibility(View.GONE);
-            }
-        });
+                if (id == R.id.chipTodos) {
+                    if(layoutProximas != null) layoutProximas.setVisibility(View.VISIBLE);
+                    if(layoutContinuar != null) layoutContinuar.setVisibility(View.VISIBLE);
+                } else if (id == R.id.chipCursos) {
+                    if(layoutProximas != null) layoutProximas.setVisibility(View.GONE);
+                    if(layoutContinuar != null) layoutContinuar.setVisibility(View.VISIBLE);
+                } else if (id == R.id.chipClases) {
+                    if(layoutProximas != null) layoutProximas.setVisibility(View.VISIBLE);
+                    if(layoutContinuar != null) layoutContinuar.setVisibility(View.GONE);
+                }
+            });
+        }
     }
 
     private void cargarSaludo(int id) {
@@ -133,10 +132,33 @@ public class Inicio extends Fragment {
                     List<Publicacion> listaClases = new ArrayList<>();
 
                     for(HistorialDto h : response.body()) {
+                        // CORRECCIÓN: Usamos getCursoId() y getTituloCurso()
                         if(h.getCursoId() != null) {
-                            listaCursos.add(new Publicacion(Publicacion.TIPO_CURSO, h.getCursoId(), "Curso Comprado", "...", 0.0, "SaberShare", "5.0", null, null, 0));
+                            listaCursos.add(new Publicacion(
+                                    Publicacion.TIPO_CURSO,
+                                    h.getCursoId(),
+                                    h.getTituloCurso() != null ? h.getTituloCurso() : "Curso Comprado",
+                                    "Comprado el: " + h.getFechapago(),
+                                    0.0,
+                                    "SaberShare",
+                                    "5.0",
+                                    null,
+                                    null,
+                                    0
+                            ));
                         } else if(h.getServicioId() != null) {
-                            listaClases.add(new Publicacion(Publicacion.TIPO_CLASE, h.getServicioId(), "Clase Agendada", "Fecha: " + h.getFechapago(), 0.0, "Profesor", "5.0", null, null, 0));
+                            listaClases.add(new Publicacion(
+                                    Publicacion.TIPO_CLASE,
+                                    h.getServicioId(),
+                                    h.getTituloServicio() != null ? h.getTituloServicio() : "Clase Agendada",
+                                    "Fecha: " + h.getFechapago(),
+                                    0.0,
+                                    "Profesor",
+                                    "5.0",
+                                    null,
+                                    null,
+                                    0
+                            ));
                         }
                     }
                     adapterContinuar.setDatos(listaCursos);

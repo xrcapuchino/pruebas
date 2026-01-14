@@ -19,10 +19,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.saber_share.R;
 import com.example.saber_share.fragmentos.contenido.adapter.PublicacionAdapter;
 import com.example.saber_share.model.CursoDto;
+import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
 import com.example.saber_share.model.ServicioDto;
 import com.example.saber_share.model.UsuarioDto;
 import com.example.saber_share.util.api.CursoApi;
+import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
 import com.example.saber_share.util.api.UsuarioApi;
@@ -48,9 +50,8 @@ public class Comprar extends Fragment {
     private List<Publicacion> listaGlobal = new ArrayList<>();
     private SessionManager sessionManager;
 
-    // Estado actual de filtros
     private String textoBusqueda = "";
-    private String categoriaFiltro = "Top"; // Por defecto "Top" o "Todos"
+    private String categoriaFiltro = "Top";
 
     public Comprar() {}
 
@@ -77,8 +78,8 @@ public class Comprar extends Fragment {
 
         cargarDatos();
         cargarNombreUsuario(miId);
+        cargarHistorialDeCompras(miId); // <--- NUEVO: Cargar lo que ya compré
 
-        // 1. Listener de Buscador (Texto)
         etBuscar.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
@@ -89,26 +90,40 @@ public class Comprar extends Fragment {
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        // 2. Listener de Chips (Categorías)
-        cgCategorias.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (!checkedIds.isEmpty()) {
-                Chip chip = group.findViewById(checkedIds.get(0));
-                if (chip != null) {
-                    categoriaFiltro = chip.getText().toString();
-                    aplicarFiltros();
+        if (cgCategorias != null) {
+            cgCategorias.setOnCheckedStateChangeListener((group, checkedIds) -> {
+                if (!checkedIds.isEmpty()) {
+                    Chip chip = group.findViewById(checkedIds.get(0));
+                    if (chip != null) {
+                        categoriaFiltro = chip.getText().toString();
+                        aplicarFiltros();
+                    }
+                }
+            });
+        }
+    }
+
+    // --- LÓGICA DE CARGA DE COMPRAS ---
+    private void cargarHistorialDeCompras(int miId) {
+        HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
+        api.historialPorUsuario(miId).enqueue(new Callback<List<HistorialDto>>() {
+            @Override
+            public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Le pasamos al adapter la lista de compras para que pinte los botones en verde
+                    adapter.setCompras(response.body());
                 }
             }
+            @Override public void onFailure(Call<List<HistorialDto>> call, Throwable t) {}
         });
     }
 
     private void aplicarFiltros() {
         List<Publicacion> listaFiltrada = new ArrayList<>();
-
         for (Publicacion p : listaGlobal) {
             boolean coincideTexto = true;
             boolean coincideCategoria = true;
 
-            // Filtro Texto
             if (!textoBusqueda.isEmpty()) {
                 if (!p.getTitulo().toLowerCase().contains(textoBusqueda.toLowerCase()) &&
                         !p.getDescripcion().toLowerCase().contains(textoBusqueda.toLowerCase())) {
@@ -116,15 +131,10 @@ public class Comprar extends Fragment {
                 }
             }
 
-            // Filtro Categoría (Simulado)
             if (!categoriaFiltro.equals("Top") && !categoriaFiltro.equals("Todos")) {
-                // Buscamos si la categoría aparece en título o descripción
-                // Ejemplo: Si filtro es "Programación", buscamos esa palabra
                 String todoTexto = (p.getTitulo() + " " + p.getDescripcion()).toLowerCase();
-
-                // Mapeo simple de categorías a palabras clave
                 String keyword = categoriaFiltro.toLowerCase();
-                if(keyword.equals("programación")) keyword = "java"; // Ajuste para demo
+                if(keyword.equals("programación")) keyword = "java";
 
                 if (!todoTexto.contains(keyword)) {
                     coincideCategoria = false;
@@ -177,7 +187,7 @@ public class Comprar extends Fragment {
                                 c.getPrecio(), c.getNombreUsuario(), c.getCalificacion(), null, c.getFoto(), c.getUsuarioId()
                         ));
                     }
-                    aplicarFiltros(); // Actualizar UI
+                    aplicarFiltros();
                 }
                 cargarServicios();
             }
@@ -196,7 +206,7 @@ public class Comprar extends Fragment {
                                 s.getPrecio(), s.getNombreUsuario(), "N/A", null, s.getRequisitos(), s.getUsuarioId()
                         ));
                     }
-                    aplicarFiltros(); // Actualizar UI final
+                    aplicarFiltros();
                 }
             }
             @Override public void onFailure(Call<List<ServicioDto>> call, Throwable t) {}

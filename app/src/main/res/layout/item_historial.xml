@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,28 +15,59 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvTituloHistorial"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Curso de Java"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tvFechaHistorial"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="20/10/2025"
-            android:textColor="#757575" />
+            <TextView
+                android:id="@+id/tvHistorialTitulo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Título del Curso"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#20232A" />
 
-        <TextView
-            android:id="@+id/tvPrecioHistorial"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvHistorialPrecio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$ 0.00"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:textSize="16sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="$500.00"
-            android:layout_gravity="end"
-            android:textColor="#4CAF50"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvHistorialTipo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Curso"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:background="#2E70FF"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:id="@+id/tvHistorialFecha"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="01/01/2026"
+                android:textColor="#757575"
+                android:textSize="14sp"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

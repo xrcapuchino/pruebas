@@ -69,7 +69,6 @@ public class DetallePublicacion extends Fragment {
         sessionManager = new SessionManager(requireContext());
         int miId = sessionManager.getUserId();
 
-        // 1. Llenar datos visuales
         ((TextView) view.findViewById(R.id.tvDetalleTitulo)).setText(titulo);
         ((TextView) view.findViewById(R.id.tvDetalleDescripcion)).setText(descripcion);
         ((TextView) view.findViewById(R.id.tvDetallePrecio)).setText(String.format("$ %.2f", precio));
@@ -90,7 +89,6 @@ public class DetallePublicacion extends Fragment {
             if (tvTituloDesc != null) tvTituloDesc.setText("Acerca de esta clase");
         }
 
-        // 2. Control de Paneles
         LinearLayout panelDueno = view.findViewById(R.id.panelDueno);
         LinearLayout panelCliente = view.findViewById(R.id.panelClienteCompra);
         LinearLayout panelAlumno = view.findViewById(R.id.panelAlumnoAcceso);
@@ -107,10 +105,8 @@ public class DetallePublicacion extends Fragment {
             verificarSiYaCompre(miId, panelCliente, panelAlumno, btnAccion);
         }
 
-        // --- LÓGICA DEL BOTÓN CHAT (Hacer una pregunta) ---
         View btnPreguntar = view.findViewById(R.id.btnContactarProfe);
         if(btnPreguntar != null) {
-            // Si eres el dueño, oculta el botón de preguntar
             if(miId == idAutor) {
                 btnPreguntar.setVisibility(View.GONE);
             } else {
@@ -119,7 +115,6 @@ public class DetallePublicacion extends Fragment {
                     Bundle bundle = new Bundle();
                     bundle.putInt("otroId", idAutor);
                     bundle.putString("otroNombre", autor);
-                    // IMPORTANTE: Usamos el ID definido en main_nav para el chat directo
                     Navigation.findNavController(v).navigate(R.id.chatDirecto, bundle);
                 });
             }
@@ -138,6 +133,7 @@ public class DetallePublicacion extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     boolean yaLoTengo = false;
                     for (HistorialDto h : response.body()) {
+                        // CORRECCIÓN: Usamos getCursoId() directamente
                         if (Publicacion.TIPO_CURSO.equals(tipo)) {
                             if (h.getCursoId() != null && h.getCursoId() == idOriginal) yaLoTengo = true;
                         } else {
@@ -186,8 +182,6 @@ public class DetallePublicacion extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putInt("idOriginal", idOriginal);
             bundle.putString("tipo", tipo);
-            // Asegúrate de tener esta acción en tu nav graph si usas VerAlumnos
-            // Navigation.findNavController(v).navigate(R.id.action_detalle_to_alumnos, bundle);
             Toast.makeText(getContext(), "Función ver alumnos", Toast.LENGTH_SHORT).show();
         });
 
@@ -200,7 +194,6 @@ public class DetallePublicacion extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt("servicioId", idOriginal);
                 bundle.putInt("profesorId", idAutor);
-                // Asegúrate de tener esta acción en tu nav graph
                 Navigation.findNavController(v).navigate(R.id.gestionarAgenda, bundle);
             });
         }
@@ -262,10 +255,13 @@ public class DetallePublicacion extends Fragment {
         compra.setPago(precio);
         compra.setUsuarioId(sessionManager.getUserId());
 
+        // CORRECCIÓN: Usamos setCursoId y setServicioId directamente
         if (Publicacion.TIPO_CURSO.equals(tipo)) {
             compra.setCursoId(idOriginal);
+            compra.setServicioId(null);
         } else {
             compra.setServicioId(idOriginal);
+            compra.setCursoId(null);
         }
 
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
@@ -281,7 +277,7 @@ public class DetallePublicacion extends Fragment {
                 }
             }
             @Override public void onFailure(Call<HistorialDto> call, Throwable t) {
-                Toast.makeText(getContext(), "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Fallo de red", Toast.LENGTH_SHORT).show();
             }
         });
     }

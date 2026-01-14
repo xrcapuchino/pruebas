@@ -1,27 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/layoutMensajePadre"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:gravity="start"> <androidx.cardview.widget.CardView
-    android:id="@+id/cardMensajeBurbuja"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:cardUseCompatPadding="true">
+    android:orientation="vertical"
+    android:padding="4dp">
 
-    <TextView
-        android:id="@+id/tvMensajeContenido"
+    <LinearLayout
+        android:id="@+id/chatContenedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="start"> <LinearLayout
+        android:id="@+id/chatBurbuja"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:text="Hola mundo"
-        android:textSize="16sp"
-        android:maxWidth="260dp"/>
-</androidx.cardview.widget.CardView>
+        android:orientation="vertical"
+        android:background="#F3F3F3"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"
+        android:layout_marginHorizontal="8dp"
+        android:maxWidth="280dp">
 
+        <TextView
+            android:id="@+id/tvChatTexto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hola, ¿cómo estás?"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvChatHora"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="4dp"
+            android:text="12:00 PM"
+            android:textColor="#555555"
+            android:textSize="10sp" />
+
+    </LinearLayout>
+    </LinearLayout>
 </LinearLayout>

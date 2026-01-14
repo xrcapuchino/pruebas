@@ -3,42 +3,39 @@ package com.example.saber_share.model;
 import com.google.gson.annotations.SerializedName;
 
 public class HistorialDto {
-    private Integer idHistorial;
-
-    private String fechapago;
+    private int idHistorial;
     private Double pago;
+    private String fechapago;
 
-    @SerializedName(value = "usuarioId", alternate = {"usuario_idUsuario", "Usuario_idUsuario"})
+    @SerializedName("usuarioId") // Aseguramos que lea 'usuarioId' del JSON
     private Integer usuarioId;
 
-    @SerializedName(value = "servicioId", alternate = {"servicio_idServicios", "Servicio_idServicios"})
-    private Integer servicioId;
-
-    @SerializedName(value = "cursoId", alternate = {"curso_idCurso", "Curso_idCurso"})
+    // CORRECCIÓN: Usamos Integer (IDs) y String (Títulos) para coincidir con el Backend
     private Integer cursoId;
+    private Integer servicioId;
 
     private String tituloCurso;
     private String tituloServicio;
 
-    public HistorialDto() {}
-
-    public Integer getIdHistorial() { return idHistorial; }
-    public void setIdHistorial(Integer idHistorial) { this.idHistorial = idHistorial; }
-
-    public String getFechapago() { return fechapago; }
-    public void setFechapago(String fechapago) { this.fechapago = fechapago; }
+    // Getters y Setters
+    public int getIdHistorial() { return idHistorial; }
+    public void setIdHistorial(int idHistorial) { this.idHistorial = idHistorial; }
 
     public Double getPago() { return pago; }
     public void setPago(Double pago) { this.pago = pago; }
 
+    public String getFechapago() { return fechapago; }
+    public void setFechapago(String fechapago) { this.fechapago = fechapago; }
+
     public Integer getUsuarioId() { return usuarioId; }
     public void setUsuarioId(Integer usuarioId) { this.usuarioId = usuarioId; }
 
-    public Integer getServicioId() { return servicioId; }
-    public void setServicioId(Integer servicioId) { this.servicioId = servicioId; }
-
+    // Estos son los métodos que te faltaban:
     public Integer getCursoId() { return cursoId; }
     public void setCursoId(Integer cursoId) { this.cursoId = cursoId; }
+
+    public Integer getServicioId() { return servicioId; }
+    public void setServicioId(Integer servicioId) { this.servicioId = servicioId; }
 
     public String getTituloCurso() { return tituloCurso; }
     public void setTituloCurso(String tituloCurso) { this.tituloCurso = tituloCurso; }

@@ -1,12 +1,16 @@
 package com.example.saber_share.fragmentos.contenido.adapter;
 
 import android.graphics.Color;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.saber_share.R;
 import com.example.saber_share.model.AgendaDto;
@@ -46,9 +50,21 @@ public class AgendaProfeAdapter extends RecyclerView.Adapter<AgendaProfeAdapter.
             holder.btnAccion.setEnabled(true);      // Ahora SI está habilitado
             holder.btnAccion.setBackgroundColor(Color.parseColor("#4CAF50")); // Verde
 
-            // Acción: Ver detalle
-            holder.btnAccion.setOnClickListener(v -> listener.onVerDetalleClick(slot));
+            holder.btnAccion.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                // Pasa el ID y Nombre del ALUMNO (que es quien reservó)
+                bundle.putInt("otroId", slot.getAlumnoId());
+                bundle.putString("otroNombre", slot.getNombreAlumno());
 
+                // IMPORTANTE: Navegar a 'chatDirecto' (definido en main_nav), NO a 'mensajes' (bandeja)
+                try {
+                    Navigation.findNavController(v).navigate(R.id.chatDirecto, bundle);
+                } catch (Exception e) {
+                    // Si 'chatDirecto' no existe, revisa tu main_nav.xml
+                    // Alternativa: R.id.action_global_chatDirecto o similar
+                    Toast.makeText(v.getContext(), "Error navegando al chat", Toast.LENGTH_SHORT).show();
+                }
+            });
         } else {
             holder.btnAccion.setText("Eliminar");
             holder.btnAccion.setEnabled(true);
