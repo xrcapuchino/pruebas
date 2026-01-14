@@ -9,7 +9,11 @@
         android:id="@+id/inicio"
         android:name="com.example.saber_share.fragmentos.contenido.Inicio"
         android:label="fragment_main_inicio"
-        tools:layout="@layout/fragment_main_inicio" />
+        tools:layout="@layout/fragment_main_inicio" >
+        <action
+            android:id="@+id/action_inicio_to_detallePublicacion"
+            app:destination="@id/detallePublicacion" />
+    </fragment>
     <fragment
         android:id="@+id/mensajes"
         android:name="com.example.saber_share.fragmentos.contenido.Mensajes"

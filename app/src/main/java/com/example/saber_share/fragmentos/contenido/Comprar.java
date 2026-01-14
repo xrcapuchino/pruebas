@@ -19,9 +19,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.saber_share.R;
 import com.example.saber_share.fragmentos.contenido.adapter.PublicacionAdapter;
 import com.example.saber_share.model.CursoDto;
+import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
 import com.example.saber_share.model.ServicioDto;
 import com.example.saber_share.util.api.CursoApi;
+import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
 import com.example.saber_share.util.local.SessionManager;
@@ -57,35 +59,53 @@ public class Comprar extends Fragment {
         rvResultados = view.findViewById(R.id.rvResultadosBusqueda);
         etBuscar = view.findViewById(R.id.etBuscarComprar);
 
-        // Configurar RecyclerView
         rvResultados.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // OBTENER EL ID DEL USUARIO ACTUAL
-        int miId = sessionManager.getUserId();
-
-        // CREAR ADAPTER CON LOS 4 PARÁMETROS NUEVOS
+        // --- CORRECCIÓN DEL CONSTRUCTOR ---
+        // Ahora usamos el constructor que coincide con PublicacionAdapter (List, Listener)
         adapter = new PublicacionAdapter(
-                getContext(),
-                new ArrayList<>(),
-                miId,
-                this::irADetalle // Referencia al método que maneja el clic
+                listaGlobal,
+                this::irADetalle
         );
 
         rvResultados.setAdapter(adapter);
 
-        // Cargar datos desde API
+        // 1. Cargar el historial primero para saber qué pintar de verde
+        cargarMisCompras();
+
+        // 2. Cargar los cursos y clases
         cargarDatos();
 
-        // Configurar Buscador
+        // Buscador
         etBuscar.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                adapter.filtrar(s.toString());
+                if (adapter != null) adapter.filtrar(s.toString());
             }
             @Override
             public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void cargarMisCompras() {
+        int userId = sessionManager.getUserId();
+        HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
+        api.historialPorUsuario(userId).enqueue(new Callback<List<HistorialDto>>() {
+            @Override
+            public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Integer> idsComprados = new ArrayList<>();
+                    for (HistorialDto h : response.body()) {
+                        if (h.getCursoId() != null) idsComprados.add(h.getCursoId());
+                        if (h.getServicioId() != null) idsComprados.add(h.getServicioId());
+                    }
+                    // Le decimos al adaptador qué IDs tenemos
+                    adapter.setIdsComprados(idsComprados);
+                }
+            }
+            @Override public void onFailure(Call<List<HistorialDto>> call, Throwable t) {}
         });
     }
 
