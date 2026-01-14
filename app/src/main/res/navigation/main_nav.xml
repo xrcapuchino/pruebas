@@ -68,6 +68,9 @@
         <action
             android:id="@+id/action_detallePublicacion_to_gestionarAgenda"
             app:destination="@id/gestionarAgenda" />
+        <action
+            android:id="@+id/action_detallePublicacion_to_verAlumnos"
+            app:destination="@id/verAlumnos" />
     </fragment>
     <fragment
         android:id="@+id/editarPublicacion"
@@ -120,6 +123,12 @@
         android:name="com.example.saber_share.fragmentos.contenido.MisClases"
         tools:layout="@layout/fragment_main_agregar_tarjeta"
         android:label="MisClases" />
+    <fragment
+        android:id="@+id/verAlumnos"
+        android:name="com.example.saber_share.fragmentos.contenido.VerAlumnos"
+        tools:layout="@layout/fragment_main_ver_alumnos"
+        android:label="VerAlumnos"
+        />
 
 
 </navigation>

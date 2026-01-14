@@ -95,6 +95,7 @@
                 android:layout_marginVertical="20dp" />
 
             <TextView
+                android:id="@+id/tvTituloDescripcion"
                 android:text="Acerca de este curso"
                 android:textStyle="bold"
                 android:textSize="18sp"

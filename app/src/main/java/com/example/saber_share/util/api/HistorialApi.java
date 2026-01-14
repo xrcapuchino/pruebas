@@ -27,4 +27,7 @@ public interface HistorialApi {
     // POST /Saber_Share/api/historial
     @POST("historial")
     Call<HistorialDto> crear(@Body HistorialDto historial);
+
+    @GET("historial/curso/{idCurso}")
+    Call<List<HistorialDto>> getAlumnosPorCurso(@Path("idCurso") int idCurso);
 }

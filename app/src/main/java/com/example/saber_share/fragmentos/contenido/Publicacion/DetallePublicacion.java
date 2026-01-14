@@ -77,6 +77,7 @@ public class DetallePublicacion extends Fragment {
 
         TextView tvLabelExtra = view.findViewById(R.id.tvLabelExtra);
         TextView tvExtra = view.findViewById(R.id.tvDetalleExtra);
+        TextView tvTituloDesc = view.findViewById(R.id.tvTituloDescripcion);
 
         // Ajustar textos según tipo
         if (Publicacion.TIPO_CURSO.equals(tipo)) {
@@ -93,6 +94,23 @@ public class DetallePublicacion extends Fragment {
         Button btnAccion = view.findViewById(R.id.btnAccionPrincipal);
 
         view.findViewById(R.id.fabAtras).setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
+
+        view.findViewById(R.id.btnVerAlumnos).setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("idOriginal", idOriginal);
+            bundle.putString("tipo", tipo);
+            Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_verAlumnos, bundle);
+        });
+
+        if (Publicacion.TIPO_CURSO.equals(tipo)) {
+            tvLabelExtra.setText("Archivo del curso:");
+            tvTituloDesc.setText("Acerca de este curso"); // Texto para curso
+            tvExtra.setText(extra != null ? extra : "No disponible");
+        } else {
+            tvLabelExtra.setText("Requisitos para la clase:");
+            tvTituloDesc.setText("Acerca de esta clase"); // Texto para clase
+            tvExtra.setText(extra != null ? extra : "Sin requisitos");
+        }
 
         if (miId == idAutor) {
             panelDueno.setVisibility(View.VISIBLE);
@@ -111,6 +129,7 @@ public class DetallePublicacion extends Fragment {
                 btnAccion.setText("Ver Horarios Disponibles");
                 btnAccion.setOnClickListener(v -> irAAgenda());
             }
+
         }
     }
 
@@ -136,16 +155,18 @@ public class DetallePublicacion extends Fragment {
         view.findViewById(R.id.btnVerAlumnos).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Ver lista de alumnos (Próximamente)", Toast.LENGTH_SHORT).show());
 
-        view.findViewById(R.id.btnGestionarAgenda).setOnClickListener(v -> {
-            if (!Publicacion.TIPO_CURSO.equals(tipo)) {
+        View btnAgenda = view.findViewById(R.id.btnGestionarAgenda);
+        if (Publicacion.TIPO_CURSO.equals(tipo)) {
+            btnAgenda.setVisibility(View.GONE);
+        } else {
+            btnAgenda.setVisibility(View.VISIBLE);
+            btnAgenda.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();
                 bundle.putInt("servicioId", idOriginal);
                 bundle.putInt("profesorId", idAutor);
                 Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_gestionarAgenda, bundle);
-            } else {
-                Toast.makeText(getContext(), "Los cursos no tienen horarios", Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        }
     }
 
     private void mostrarDialogoConfirmacion() {
