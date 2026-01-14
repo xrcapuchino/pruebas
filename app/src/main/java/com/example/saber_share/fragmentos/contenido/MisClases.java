@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.saber_share.R;
-import com.example.saber_share.fragmentos.contenido.adapter.HistorialAdapter; // Reusamos este adapter que ya funciona
+import com.example.saber_share.fragmentos.contenido.adapter.HistorialAdapter;
 import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
@@ -37,7 +37,6 @@ public class MisClases extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Reutilizamos el layout de agenda o historial que tenga un RecyclerView
         return inflater.inflate(R.layout.fragment_main_agendar_clase, container, false);
     }
 
@@ -46,15 +45,14 @@ public class MisClases extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         sessionManager = new SessionManager(requireContext());
 
-        // Ajustamos textos del layout reutilizado
         TextView titulo = view.findViewById(R.id.tvTituloAgendar);
         if(titulo != null) titulo.setText("Mi Agenda");
 
         View sub = view.findViewById(R.id.tvSubtituloServicio);
         if(sub != null) sub.setVisibility(View.GONE);
 
-        rvAgenda = view.findViewById(R.id.rvHorarios); // ID reusado
-        tvVacio = view.findViewById(R.id.tvSinHorarios); // ID reusado
+        rvAgenda = view.findViewById(R.id.rvHorarios);
+        tvVacio = view.findViewById(R.id.tvSinHorarios);
 
         rvAgenda.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -65,7 +63,6 @@ public class MisClases extends Fragment {
         int miId = sessionManager.getUserId();
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
 
-        // Obtenemos todo el historial y filtramos solo lo que son Servicios (Clases)
         api.historialPorUsuario(miId).enqueue(new Callback<List<HistorialDto>>() {
             @Override
             public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
@@ -73,7 +70,6 @@ public class MisClases extends Fragment {
                     List<HistorialDto> soloClases = new ArrayList<>();
 
                     for (HistorialDto h : response.body()) {
-                        // Filtramos: Si tiene servicioId, es una clase agendada
                         if (h.getServicioId() != null) {
                             soloClases.add(h);
                         }
@@ -86,13 +82,18 @@ public class MisClases extends Fragment {
                     } else {
                         tvVacio.setVisibility(View.GONE);
                         rvAgenda.setVisibility(View.VISIBLE);
-                        // Usamos el HistorialAdapter que ya arreglamos y sabe mostrar títulos
-                        rvAgenda.setAdapter(new HistorialAdapter(soloClases));
+
+                        // --- CORRECCIÓN AQUÍ: Agregamos getContext() ---
+                        if (getContext() != null) {
+                            rvAgenda.setAdapter(new HistorialAdapter(getContext(), soloClases));
+                        }
                     }
                 }
             }
             @Override public void onFailure(Call<List<HistorialDto>> call, Throwable t) {
-                Toast.makeText(getContext(), "Error cargando agenda", Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Error cargando agenda", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

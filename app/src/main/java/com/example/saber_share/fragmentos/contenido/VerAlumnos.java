@@ -62,9 +62,9 @@ public class VerAlumnos extends Fragment {
                     // Mapear a una lista de Strings simple por ahora
                     List<String> nombres = new ArrayList<>();
                     for (HistorialDto h : response.body()) {
-                        // Aquí asumimos que el backend envía el nombre del usuario en el DTO
-                        // Si no, habría que hacer otra llamada o mostrar el ID
-                        nombres.add("Usuario ID: " + h.getUsuarioId() + " (Comprado el " + h.getFechapago() + ")");
+                        // CORRECCIÓN: Usamos el nombre real
+                        String nombre = h.getNombreAlumno() != null ? h.getNombreAlumno() : "Usuario " + h.getUsuarioId();
+                        nombres.add(nombre + "\nComprado el: " + h.getFechapago());
                     }
                     mostrarLista(nombres);
                 }

@@ -16,7 +16,6 @@ import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.local.SessionManager;
-import java.util.ArrayList;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,6 +25,8 @@ public class Historial extends Fragment {
 
     private RecyclerView rvHistorial;
     private SessionManager session;
+
+    public Historial() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -46,16 +47,17 @@ public class Historial extends Fragment {
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
         int miId = session.getUserId();
 
-        // CAMBIO: Usamos el endpoint específico para filtrar por usuario desde el servidor
         api.historialPorUsuario(miId).enqueue(new Callback<List<HistorialDto>>() {
             @Override
             public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
                 if(response.isSuccessful() && response.body() != null) {
                     List<HistorialDto> misCompras = response.body();
 
-                    // Si la lista está vacía, podríamos mostrar un mensaje (opcional),
-                    // por ahora simplemente seteamos el adaptador.
-                    rvHistorial.setAdapter(new HistorialAdapter(misCompras));
+                    // --- CORRECCIÓN AQUÍ ---
+                    // Agregamos getContext() como primer parámetro
+                    if (getContext() != null) {
+                        rvHistorial.setAdapter(new HistorialAdapter(getContext(), misCompras));
+                    }
                 } else {
                     Toast.makeText(getContext(), "No se pudo cargar el historial", Toast.LENGTH_SHORT).show();
                 }

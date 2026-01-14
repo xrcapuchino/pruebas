@@ -16,7 +16,11 @@ public class HistorialDto {
 
     private String tituloCurso;
     private String tituloServicio;
+    // Agrega el campo y sus getter/setter
+    private String nombreAlumno;
 
+    public String getNombreAlumno() { return nombreAlumno; }
+    public void setNombreAlumno(String nombreAlumno) { this.nombreAlumno = nombreAlumno; }
     // Getters y Setters
     public int getIdHistorial() { return idHistorial; }
     public void setIdHistorial(int idHistorial) { this.idHistorial = idHistorial; }
