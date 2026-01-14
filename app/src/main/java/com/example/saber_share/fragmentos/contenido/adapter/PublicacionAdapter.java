@@ -1,5 +1,7 @@
 package com.example.saber_share.fragmentos.contenido.adapter;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,109 +18,127 @@ import com.example.saber_share.model.Publicacion;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.ViewHolder> {
+public class PublicacionAdapter extends RecyclerView.Adapter<PublicacionAdapter.PublicacionViewHolder> {
 
-    private List<Publicacion> listaOriginal; // Lista completa para el filtro
-    private List<Publicacion> listaMostrada; // Lista que se ve en pantalla
+    private Context context;
+    private List<Publicacion> listaOriginal;
+    private List<Publicacion> listaFiltrada;
+    private int usuarioActualId;
     private OnItemClickListener listener;
-    private List<Integer> idsComprados = new ArrayList<>();
 
     public interface OnItemClickListener {
         void onItemClick(Publicacion publicacion);
     }
 
-    public PublicacionAdapter(List<Publicacion> lista, OnItemClickListener listener) {
-        this.listaOriginal = new ArrayList<>(lista);
-        this.listaMostrada = lista;
+    public PublicacionAdapter(Context context, List<Publicacion> lista, int usuarioActualId, OnItemClickListener listener) {
+        this.context = context;
+        this.listaOriginal = lista;
+        this.listaFiltrada = new ArrayList<>(lista);
+        this.usuarioActualId = usuarioActualId;
         this.listener = listener;
-    }
-
-    // Método para actualizar datos desde el fragmento
-    public void setDatos(List<Publicacion> nuevosDatos) {
-        this.listaOriginal = new ArrayList<>(nuevosDatos);
-        this.listaMostrada = new ArrayList<>(nuevosDatos);
-        notifyDataSetChanged();
-    }
-
-    public void setIdsComprados(List<Integer> ids) {
-        this.idsComprados = ids;
-        notifyDataSetChanged();
-    }
-
-    // Método de filtrado para el buscador
-    public void filtrar(String texto) {
-        if (texto.isEmpty()) {
-            listaMostrada = new ArrayList<>(listaOriginal);
-        } else {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                listaMostrada = listaOriginal.stream()
-                        .filter(p -> p.getTitulo().toLowerCase().contains(texto.toLowerCase()))
-                        .collect(Collectors.toList());
-            } else {
-                // Versiones viejas de Android
-                List<Publicacion> temp = new ArrayList<>();
-                for (Publicacion p : listaOriginal) {
-                    if (p.getTitulo().toLowerCase().contains(texto.toLowerCase())) {
-                        temp.add(p);
-                    }
-                }
-                listaMostrada = temp;
-            }
-        }
-        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_publicacion, parent, false);
-        return new ViewHolder(view);
+    public PublicacionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_publicacion, parent, false);
+        return new PublicacionViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Publicacion item = listaMostrada.get(position);
+    public void onBindViewHolder(@NonNull PublicacionViewHolder holder, int position) {
+        Publicacion p = listaFiltrada.get(position);
 
-        holder.tvTitulo.setText(item.getTitulo());
-        holder.tvAutor.setText(item.getAutor());
-        holder.tvCalif.setText(item.getCalificacion() + " ★");
+        String prefijo = Publicacion.TIPO_CURSO.equals(p.getTipo()) ? "Curso: " : "Clase 1 a 1: ";
+        holder.tvTitulo.setText(prefijo + p.getTitulo());
 
-        // Lógica de Compra Visual
-        if (idsComprados.contains(item.getIdOriginal())) {
-            holder.tvPrecio.setText("¡Adquirido!");
-            holder.tvPrecio.setTextColor(Color.parseColor("#4CAF50")); // Verde
-            holder.btnAccion.setText("Abrir");
-            holder.btnAccion.setBackgroundColor(Color.parseColor("#4CAF50"));
+        // Formatear precio
+        holder.tvPrecio.setText(String.format("$ %.2f MXN", p.getPrecio()));
+
+        // Validar calificación
+        String calif = (p.getCalificacion() != null && !p.getCalificacion().equals("0")) ? p.getCalificacion() : "N/A";
+        holder.tvCalificacion.setText(calif + " ★");
+
+        // --- LÓGICA DE BOTONES Y COLORES ---
+        boolean esMio = p.getIdAutor() == usuarioActualId;
+
+        if (esMio) {
+            // Caso 1: Es mi publicación
+            holder.tvAutor.setText("Hecho por ti");
+            holder.btnAccion.setText("Gestionar");
+            // Cambiar color a GRIS
+            holder.btnAccion.setBackgroundTintList(ColorStateList.valueOf(Color.GRAY));
         } else {
-            holder.tvPrecio.setText(String.format("$ %.2f MXN", item.getPrecio()));
-            holder.tvPrecio.setTextColor(Color.parseColor("#20232A")); // Negro
-            holder.btnAccion.setText("Pagar");
-            holder.btnAccion.setBackgroundColor(Color.parseColor("#2E70FF"));
+            // Caso 2: Es de otro usuario
+            holder.tvAutor.setText("Por: " + (p.getAutor() != null ? p.getAutor() : "Anónimo"));
+
+            // Restaurar color original (AZUL #2E70FF)
+            holder.btnAccion.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#2E70FF")));
+
+            if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
+                holder.btnAccion.setText("Pagar");
+            } else {
+                holder.btnAccion.setText("Agendar");
+            }
         }
 
-        holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
-        holder.btnAccion.setOnClickListener(v -> listener.onItemClick(item));
+        // Imágenes dummy (puedes mejorarlo luego con Glide/Picasso)
+        if (Publicacion.TIPO_CURSO.equals(p.getTipo())) {
+            holder.imgPortada.setImageResource(R.drawable.img);
+        } else {
+            holder.imgPortada.setImageResource(R.drawable.img_1);
+        }
+
+        // Click en el botón
+        holder.btnAccion.setOnClickListener(v -> {
+            if (listener != null) listener.onItemClick(p);
+        });
+
+        // Click en la tarjeta
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onItemClick(p);
+        });
     }
 
     @Override
     public int getItemCount() {
-        return listaMostrada.size();
+        return listaFiltrada.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitulo, tvAutor, tvPrecio, tvCalif;
+    public void setDatos(List<Publicacion> nuevosDatos) {
+        this.listaOriginal = nuevosDatos;
+        this.listaFiltrada = new ArrayList<>(nuevosDatos);
+        notifyDataSetChanged();
+    }
+
+    public void filtrar(String texto) {
+        if (texto.isEmpty()) {
+            listaFiltrada = new ArrayList<>(listaOriginal);
+        } else {
+            List<Publicacion> temp = new ArrayList<>();
+            for (Publicacion p : listaOriginal) {
+                if (p.getTitulo().toLowerCase().contains(texto.toLowerCase())) {
+                    temp.add(p);
+                }
+            }
+            listaFiltrada = temp;
+        }
+        notifyDataSetChanged();
+    }
+
+    static class PublicacionViewHolder extends RecyclerView.ViewHolder {
         ImageView imgPortada;
+        TextView tvTitulo, tvAutor, tvCalificacion, tvPrecio;
         Button btnAccion;
 
-        public ViewHolder(@NonNull View itemView) {
+        public PublicacionViewHolder(@NonNull View itemView) {
             super(itemView);
+            imgPortada = itemView.findViewById(R.id.imgPortada);
             tvTitulo = itemView.findViewById(R.id.tvTituloPub);
             tvAutor = itemView.findViewById(R.id.tvAutorPub);
+            tvCalificacion = itemView.findViewById(R.id.tvCalificacionPub);
             tvPrecio = itemView.findViewById(R.id.tvPrecioPub);
-            tvCalif = itemView.findViewById(R.id.tvCalificacionPub);
-            imgPortada = itemView.findViewById(R.id.imgPortada);
             btnAccion = itemView.findViewById(R.id.btnAccionPub);
         }
     }

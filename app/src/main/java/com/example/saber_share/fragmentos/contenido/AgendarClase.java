@@ -41,7 +41,6 @@ public class AgendarClase extends Fragment {
     private SessionManager sessionManager;
     private double precioClase;
 
-    // Variables recibidas del Bundle
     private int servicioId;
     private int profesorId;
     private String tituloServicio;
@@ -65,7 +64,8 @@ public class AgendarClase extends Fragment {
         if (getArguments() != null) {
             servicioId = getArguments().getInt("servicioId", -1);
             tituloServicio = getArguments().getString("titulo", "Clase");
-            precioClase = getArguments().getDouble("precio", 0.0); // Recibimos precio
+            precioClase = getArguments().getDouble("precio", 0.0);
+            profesorId = getArguments().getInt("profesorId", -1); // Importante recuperarlo
 
             tvSubtitulo.setText("Horarios para: " + tituloServicio);
         }
@@ -80,21 +80,17 @@ public class AgendarClase extends Fragment {
             public void onResponse(Call<List<AgendaDto>> call, Response<List<AgendaDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<AgendaDto> disponibles = new ArrayList<>();
-
                     for (AgendaDto slot : response.body()) {
                         if ("DISPONIBLE".equalsIgnoreCase(slot.getEstado())) {
                             disponibles.add(slot);
                         }
                     }
-
                     actualizarUI(disponibles);
                 } else {
                     mostrarMensaje("No se pudieron cargar los horarios");
                 }
             }
-
-            @Override
-            public void onFailure(Call<List<AgendaDto>> call, Throwable t) {
+            @Override public void onFailure(Call<List<AgendaDto>> call, Throwable t) {
                 mostrarMensaje("Error de conexión");
             }
         });
@@ -121,6 +117,7 @@ public class AgendarClase extends Fragment {
                 .show();
     }
 
+    // LÓGICA UNIFICADA: Reserva API -> Guarda Historial -> Sale
     private void realizarReserva(AgendaDto slot) {
         int miIdAlumno = sessionManager.getUserId();
         if(miIdAlumno == profesorId) {
@@ -133,8 +130,8 @@ public class AgendarClase extends Fragment {
             @Override
             public void onResponse(Call<AgendaDto> call, Response<AgendaDto> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), "¡Reserva Exitosa!", Toast.LENGTH_LONG).show();
-                    Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
+                    // ÉXITO EN RESERVA: AHORA GUARDAMOS EN HISTORIAL
+                    guardarEnHistorial(slot);
                 } else {
                     mostrarMensaje("Error al reservar: " + response.code());
                 }
@@ -144,25 +141,6 @@ public class AgendarClase extends Fragment {
                 mostrarMensaje("Fallo de red al reservar");
             }
         });
-
-    }
-    private void reservar(AgendaDto slot) {
-        AgendaApi api = RetrofitClient.getClient().create(AgendaApi.class);
-        api.reservarSlot(slot.getIdAgenda(), sessionManager.getUserId()).enqueue(new Callback<AgendaDto>() {
-            @Override
-            public void onResponse(Call<AgendaDto> call, Response<AgendaDto> response) {
-                if (response.isSuccessful()) {
-                    // SI LA RESERVA FUE EXITOSA -> GUARDAMOS EN HISTORIAL
-                    guardarEnHistorial(slot);
-                } else {
-                    Toast.makeText(getContext(), "Error al reservar", Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onFailure(Call<AgendaDto> call, Throwable t) {
-                Toast.makeText(getContext(), "Fallo de red", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void guardarEnHistorial(AgendaDto slot) {
@@ -170,26 +148,31 @@ public class AgendarClase extends Fragment {
         historial.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         historial.setPago(precioClase);
         historial.setUsuarioId(sessionManager.getUserId());
-        historial.setServicioId(servicioId); // Es una clase (servicio)
-        historial.setCursoId(null);
+        historial.setServicioId(servicioId);
+        historial.setCursoId(null); // Es null porque es una clase (servicio)
 
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
         api.crear(historial).enqueue(new Callback<HistorialDto>() {
             @Override
             public void onResponse(Call<HistorialDto> call, Response<HistorialDto> response) {
-                // Ya sea que falle o no el historial, la reserva ya se hizo, asi que sacamos al usuario
-                Toast.makeText(getContext(), "¡Clase Agendada y Registrada!", Toast.LENGTH_LONG).show();
-                Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
+                // Independientemente de si el historial se guarda bien o mal, la reserva ya está hecha.
+                // Notificamos al usuario y salimos.
+                Toast.makeText(getContext(), "¡Clase Agendada Exitosamente!", Toast.LENGTH_LONG).show();
+                try {
+                    Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
+                } catch (Exception e) {
+                    // Por si acaso la vista ya no existe
+                }
             }
 
             @Override
             public void onFailure(Call<HistorialDto> call, Throwable t) {
-                // Si falla el historial pero la reserva quedó, avisamos pero salimos igual
-                Toast.makeText(getContext(), "Clase reservada (Error al guardar historial)", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Clase reservada (Nota: Error guardando historial)", Toast.LENGTH_LONG).show();
                 Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
             }
         });
     }
+
     private void mostrarMensaje(String msg) {
         if(getContext() != null) Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }

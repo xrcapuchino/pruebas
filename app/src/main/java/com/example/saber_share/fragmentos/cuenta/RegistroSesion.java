@@ -164,7 +164,7 @@ public class RegistroSesion extends Fragment implements View.OnClickListener {
                 desbloquearBoton();
                 if (response.isSuccessful() && response.body() != null) {
                     // ¡AQUÍ ES DONDE OBTENEMOS EL ID DEL NUEVO USUARIO!
-                    int nuevoId = response.body().getId();
+                    int nuevoId = response.body().getIdUsuario();
 
                     // Guardamos sesión con el ID real que nos devolvió la base de datos
                     repository.guardarSesion(user, pass, nuevoId);

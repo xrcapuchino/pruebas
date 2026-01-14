@@ -16,9 +16,25 @@
     </fragment>
     <fragment
         android:id="@+id/mensajes"
+        android:name="com.example.saber_share.fragmentos.contenido.BandejaMensajes"
+        android:label="Mis Mensajes"
+        tools:layout="@layout/fragment_main_mensajes">
+        <action
+        android:id="@+id/action_bandeja_to_chat"
+        app:destination="@id/chatDirecto" />
+    </fragment>
+    <fragment
+        android:id="@+id/chatDirecto"
         android:name="com.example.saber_share.fragmentos.contenido.Mensajes"
-        android:label="fragment_main_mensajes"
-        tools:layout="@layout/fragment_main_mensajes" />
+        android:label="Chat"
+        tools:layout="@layout/fragment_main_mensajes">
+        <argument
+            android:name="otroId"
+            app:argType="integer" />
+        <argument
+            android:name="otroNombre"
+            app:argType="string" />
+    </fragment>
     <fragment
         android:id="@+id/perfil"
         android:name="com.example.saber_share.fragmentos.contenido.Perfil"
@@ -75,6 +91,9 @@
         <action
             android:id="@+id/action_detallePublicacion_to_verAlumnos"
             app:destination="@id/verAlumnos" />
+        <action
+            android:id="@+id/action_detalle_to_chat"
+            app:destination="@id/chatDirecto" />
     </fragment>
     <fragment
         android:id="@+id/editarPublicacion"
@@ -133,6 +152,15 @@
         tools:layout="@layout/fragment_main_ver_alumnos"
         android:label="VerAlumnos"
         />
-
+    <fragment
+        android:id="@+id/bandejaMensajes"
+        android:name="com.example.saber_share.fragmentos.contenido.BandejaMensajes"
+        android:label="fragment_main_bandeja_mensajes"
+        tools:layout="@layout/fragment_main_bandeja_mensajes" />
+    <fragment
+        android:id="@+id/estadisticasFragment"
+        android:name="com.example.saber_share.fragmentos.contenido.Estadisticas"
+        android:label="Estadísticas"
+        tools:layout="@layout/fragment_main_estadisticas" />
 
 </navigation>

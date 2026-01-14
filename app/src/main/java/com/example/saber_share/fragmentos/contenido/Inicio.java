@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,12 +20,13 @@ import com.example.saber_share.fragmentos.contenido.adapter.PublicacionAdapter;
 import com.example.saber_share.model.CursoDto;
 import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
-import com.example.saber_share.model.ServicioDto;
+import com.example.saber_share.model.UsuarioDto;
 import com.example.saber_share.util.api.CursoApi;
 import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
-import com.example.saber_share.util.api.ServicioApi;
+import com.example.saber_share.util.api.UsuarioApi;
 import com.example.saber_share.util.local.SessionManager;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,16 +37,15 @@ import retrofit2.Response;
 
 public class Inicio extends Fragment {
 
+    private TextView tvSaludo;
     private RecyclerView rvProximasClases, rvContinuarCursos, rvCursosImpartidos;
-    private PublicacionAdapter adapterClases, adapterMisCursos, adapterTodosCursos;
+    private LinearLayout layoutProximas, layoutContinuar;
+    private ChipGroup cgFiltros;
     private SessionManager sessionManager;
 
-    private List<Publicacion> listaClases = new ArrayList<>();
-    private List<Publicacion> listaMisCursos = new ArrayList<>();
-    private List<Publicacion> listaTodosCursos = new ArrayList<>();
-
-    // Para guardar temporalmente qué tenemos comprado
-    private List<Integer> misIdsCursos = new ArrayList<>();
+    private PublicacionAdapter adapterImpartidos;
+    private PublicacionAdapter adapterContinuar;
+    private PublicacionAdapter adapterProximas;
 
     public Inicio() {}
 
@@ -55,137 +57,113 @@ public class Inicio extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        sessionManager = new SessionManager(requireContext());
 
-        // 1. Vincular Vistas (IDs reales de tu XML)
+        sessionManager = new SessionManager(requireContext());
+        int miId = sessionManager.getUserId();
+
+        tvSaludo = view.findViewById(R.id.tvSaludo);
+
+        // Layouts contenedores para ocultar/mostrar
+        layoutProximas = view.findViewById(R.id.layoutProximasClases);
+        layoutContinuar = view.findViewById(R.id.layoutContinuarCursos);
+        cgFiltros = view.findViewById(R.id.cgFiltrosInicio);
+
         rvProximasClases = view.findViewById(R.id.rvProximasClases);
         rvContinuarCursos = view.findViewById(R.id.rvContinuarCursos);
         rvCursosImpartidos = view.findViewById(R.id.rvCursosImpartidos);
 
-        // 2. Configurar LayoutManagers (Horizontales y Vertical)
         rvProximasClases.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         rvContinuarCursos.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        rvCursosImpartidos.setLayoutManager(new LinearLayoutManager(getContext())); // Vertical por defecto
+        rvCursosImpartidos.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 3. Inicializar Adaptadores
-        adapterClases = new PublicacionAdapter(listaClases, this::irADetalle);
-        adapterMisCursos = new PublicacionAdapter(listaMisCursos, this::irADetalle);
-        adapterTodosCursos = new PublicacionAdapter(listaTodosCursos, this::irADetalle);
+        adapterImpartidos = new PublicacionAdapter(getContext(), new ArrayList<>(), miId, this::irADetalle);
+        adapterContinuar = new PublicacionAdapter(getContext(), new ArrayList<>(), miId, this::irADetalle);
+        adapterProximas = new PublicacionAdapter(getContext(), new ArrayList<>(), miId, this::irADetalle);
 
-        rvProximasClases.setAdapter(adapterClases);
-        rvContinuarCursos.setAdapter(adapterMisCursos);
-        rvCursosImpartidos.setAdapter(adapterTodosCursos);
+        rvCursosImpartidos.setAdapter(adapterImpartidos);
+        rvContinuarCursos.setAdapter(adapterContinuar);
+        rvProximasClases.setAdapter(adapterProximas);
 
-        // 4. Cargar Datos
-        cargarHistorialYFiltrar(); // Primero historial para saber qué es "mío"
-        cargarClases(); // Llenar rvProximasClases
-        cargarCursosGenerales(); // Llenar rvCursosImpartidos
+        cargarSaludo(miId);
+        cargarMisPublicaciones(miId);
+        cargarMisCompras(miId);
+
+        view.findViewById(R.id.tvBuscarInicio).setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.comprar)
+        );
+
+        // --- LÓGICA DE FILTROS ---
+        cgFiltros.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            int id = checkedIds.get(0);
+
+            if (id == R.id.chipTodos) {
+                layoutProximas.setVisibility(View.VISIBLE);
+                layoutContinuar.setVisibility(View.VISIBLE);
+            } else if (id == R.id.chipCursos) {
+                layoutProximas.setVisibility(View.GONE);
+                layoutContinuar.setVisibility(View.VISIBLE);
+            } else if (id == R.id.chipClases) {
+                layoutProximas.setVisibility(View.VISIBLE);
+                layoutContinuar.setVisibility(View.GONE);
+            }
+        });
     }
 
-    private void cargarHistorialYFiltrar() {
-        int userId = sessionManager.getUserId();
+    private void cargarSaludo(int id) {
+        UsuarioApi api = RetrofitClient.getClient().create(UsuarioApi.class);
+        api.getById(id).enqueue(new Callback<UsuarioDto>() {
+            @Override
+            public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
+                if(response.isSuccessful() && response.body() != null){
+                    tvSaludo.setText("HOLA DE NUEVO " + response.body().getNombre().toUpperCase());
+                }
+            }
+            @Override public void onFailure(Call<UsuarioDto> call, Throwable t) {}
+        });
+    }
+
+    private void cargarMisCompras(int miId) {
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
-        api.historialPorUsuario(userId).enqueue(new Callback<List<HistorialDto>>() {
+        api.historialPorUsuario(miId).enqueue(new Callback<List<HistorialDto>>() {
             @Override
             public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    misIdsCursos.clear();
-                    List<Integer> idsServicios = new ArrayList<>();
+                if(response.isSuccessful() && response.body() != null) {
+                    List<Publicacion> listaCursos = new ArrayList<>();
+                    List<Publicacion> listaClases = new ArrayList<>();
 
-                    for (HistorialDto h : response.body()) {
-                        if (h.getCursoId() != null) misIdsCursos.add(h.getCursoId());
-                        if (h.getServicioId() != null) idsServicios.add(h.getServicioId());
+                    for(HistorialDto h : response.body()) {
+                        if(h.getCursoId() != null) {
+                            listaCursos.add(new Publicacion(Publicacion.TIPO_CURSO, h.getCursoId(), "Curso Comprado", "...", 0.0, "SaberShare", "5.0", null, null, 0));
+                        } else if(h.getServicioId() != null) {
+                            listaClases.add(new Publicacion(Publicacion.TIPO_CLASE, h.getServicioId(), "Clase Agendada", "Fecha: " + h.getFechapago(), 0.0, "Profesor", "5.0", null, null, 0));
+                        }
                     }
-
-                    // Actualizamos adaptadores para que pinten verde lo comprado
-                    adapterClases.setIdsComprados(idsServicios);
-                    adapterTodosCursos.setIdsComprados(misIdsCursos);
-
-                    // Ahora cargamos la lista de "Continuar Cursos" (solo los míos)
-                    cargarMisCursosDesdeAPI();
+                    adapterContinuar.setDatos(listaCursos);
+                    adapterProximas.setDatos(listaClases);
                 }
             }
             @Override public void onFailure(Call<List<HistorialDto>> call, Throwable t) {}
         });
     }
 
-    private void cargarMisCursosDesdeAPI() {
-        // Obtenemos TODOS los cursos y filtramos localmente los que están en 'misIdsCursos'
-        CursoApi api = RetrofitClient.getClient().create(CursoApi.class);
-        api.lista().enqueue(new Callback<List<CursoDto>>() {
+    private void cargarMisPublicaciones(int miId) {
+        CursoApi cursoApi = RetrofitClient.getClient().create(CursoApi.class);
+        cursoApi.lista().enqueue(new Callback<List<CursoDto>>() {
             @Override
             public void onResponse(Call<List<CursoDto>> call, Response<List<CursoDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    listaMisCursos.clear();
-                    for (CursoDto c : response.body()) {
-                        if (misIdsCursos.contains(c.getIdCurso())) {
-                            listaMisCursos.add(convertirCurso(c));
+                if(response.isSuccessful() && response.body() != null){
+                    List<Publicacion> misPubs = new ArrayList<>();
+                    for(CursoDto c : response.body()){
+                        if(c.getUsuarioId() == miId) {
+                            misPubs.add(new Publicacion(Publicacion.TIPO_CURSO, c.getIdCurso(), c.getTitulo(), c.getDescripcion(), c.getPrecio(), "Tú", c.getCalificacion(), null, c.getFoto(), c.getUsuarioId()));
                         }
                     }
-                    adapterMisCursos.setIdsComprados(misIdsCursos); // Para que salgan verdes
-                    adapterMisCursos.notifyDataSetChanged();
+                    adapterImpartidos.setDatos(misPubs);
                 }
             }
             @Override public void onFailure(Call<List<CursoDto>> call, Throwable t) {}
         });
-    }
-
-    private void cargarCursosGenerales() {
-        CursoApi api = RetrofitClient.getClient().create(CursoApi.class);
-        api.lista().enqueue(new Callback<List<CursoDto>>() {
-            @Override
-            public void onResponse(Call<List<CursoDto>> call, Response<List<CursoDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    listaTodosCursos.clear();
-                    for (CursoDto c : response.body()) {
-                        listaTodosCursos.add(convertirCurso(c));
-                    }
-                    adapterTodosCursos.notifyDataSetChanged();
-                }
-            }
-            @Override public void onFailure(Call<List<CursoDto>> call, Throwable t) {}
-        });
-    }
-
-    private void cargarClases() {
-        ServicioApi api = RetrofitClient.getClient().create(ServicioApi.class);
-        api.lista().enqueue(new Callback<List<ServicioDto>>() {
-            @Override
-            public void onResponse(Call<List<ServicioDto>> call, Response<List<ServicioDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    listaClases.clear();
-                    for (ServicioDto s : response.body()) {
-                        Publicacion p = new Publicacion();
-                        p.setIdOriginal(s.getServicioId());
-                        p.setTipo(Publicacion.TIPO_CLASE);
-                        p.setTitulo(s.getTitulo());
-                        p.setDescripcion(s.getDescripcion());
-                        p.setPrecio(s.getPrecio());
-                        p.setIdAutor(s.getUsuarioId());
-                        p.setAutor("Profesor ID: " + s.getUsuarioId());
-                        p.setCalificacion("4.8");
-                        p.setExtraInfo(s.getRequisitos());
-                        listaClases.add(p);
-                    }
-                    adapterClases.notifyDataSetChanged();
-                }
-            }
-            @Override public void onFailure(Call<List<ServicioDto>> call, Throwable t) {}
-        });
-    }
-
-    private Publicacion convertirCurso(CursoDto c) {
-        Publicacion p = new Publicacion();
-        p.setIdOriginal(c.getIdCurso());
-        p.setTipo(Publicacion.TIPO_CURSO);
-        p.setTitulo(c.getTitulo());
-        p.setDescripcion(c.getDescripcion());
-        p.setPrecio(c.getPrecio());
-        p.setIdAutor(c.getUsuarioId());
-        p.setAutor("Profesor ID: " + c.getUsuarioId());
-        p.setCalificacion("4.5");
-        p.setExtraInfo(c.getFoto());
-        return p;
     }
 
     private void irADetalle(Publicacion p) {
@@ -197,9 +175,9 @@ public class Inicio extends Fragment {
         bundle.putString("descripcion", p.getDescripcion());
         bundle.putDouble("precio", p.getPrecio());
         bundle.putString("autor", p.getAutor());
-        bundle.putString("calificacion", p.getCalificacion());
-        bundle.putString("extra", p.getExtraInfo());
 
-        Navigation.findNavController(requireView()).navigate(R.id.action_inicio_to_detallePublicacion, bundle);
+        try {
+            Navigation.findNavController(requireView()).navigate(R.id.detallePublicacion, bundle);
+        } catch (Exception e) {}
     }
 }

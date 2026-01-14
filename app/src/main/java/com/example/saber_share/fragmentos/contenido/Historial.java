@@ -14,7 +14,7 @@ import com.example.saber_share.R;
 import com.example.saber_share.fragmentos.contenido.adapter.HistorialAdapter;
 import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.util.api.RetrofitClient;
-import com.example.saber_share.util.api.HistorialApi; // Interfaz nueva
+import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.local.SessionManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,23 +44,25 @@ public class Historial extends Fragment {
 
     private void cargarHistorial() {
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
-        // Asumiendo que el backend tiene un endpoint para filtrar por usuario
-        // Si no, traemos todo y filtramos aqui (estilo semi-profesional temporal)
-        api.lista().enqueue(new Callback<List<HistorialDto>>() {
+        int miId = session.getUserId();
+
+        // CAMBIO: Usamos el endpoint específico para filtrar por usuario desde el servidor
+        api.historialPorUsuario(miId).enqueue(new Callback<List<HistorialDto>>() {
             @Override
             public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
                 if(response.isSuccessful() && response.body() != null) {
-                    List<HistorialDto> misCompras = new ArrayList<>();
-                    int miId = session.getUserId();
-                    for(HistorialDto h : response.body()) {
-                        if(h.getUsuarioId() == miId) misCompras.add(h);
-                    }
+                    List<HistorialDto> misCompras = response.body();
+
+                    // Si la lista está vacía, podríamos mostrar un mensaje (opcional),
+                    // por ahora simplemente seteamos el adaptador.
                     rvHistorial.setAdapter(new HistorialAdapter(misCompras));
+                } else {
+                    Toast.makeText(getContext(), "No se pudo cargar el historial", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(Call<List<HistorialDto>> call, Throwable t) {
-                Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

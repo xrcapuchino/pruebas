@@ -94,7 +94,7 @@ public class InicioSesion extends Fragment implements View.OnClickListener {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     UsuarioDto u = response.body().get(0);
                     if (passwordInput.equals(u.getPassword())) {
-                        repository.guardarSesion(u.getCorreo(), u.getPassword(), u.getId());
+                        repository.guardarSesion(u.getCorreo(), u.getPassword(), u.getIdUsuario());
                         irAlMain();
                     } else {
                         Toast.makeText(getContext(), "Contraseña incorrecta", Toast.LENGTH_SHORT).show();

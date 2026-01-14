@@ -73,14 +73,13 @@ public class DetallePublicacion extends Fragment {
         ((TextView) view.findViewById(R.id.tvDetalleTitulo)).setText(titulo);
         ((TextView) view.findViewById(R.id.tvDetalleDescripcion)).setText(descripcion);
         ((TextView) view.findViewById(R.id.tvDetallePrecio)).setText(String.format("$ %.2f", precio));
-        ((TextView) view.findViewById(R.id.tvDetalleAutor)).setText(autor);
+        ((TextView) view.findViewById(R.id.tvDetalleAutor)).setText("Por: " + autor);
         ((TextView) view.findViewById(R.id.tvDetalleCalif)).setText(calificacion + " ★");
 
         TextView tvLabelExtra = view.findViewById(R.id.tvLabelExtra);
         TextView tvExtra = view.findViewById(R.id.tvDetalleExtra);
-        TextView tvTituloDesc = view.findViewById(R.id.tvTituloDescripcion); // Asegúrate de tener este ID en XML
+        TextView tvTituloDesc = view.findViewById(R.id.tvTituloDescripcion);
 
-        // Lógica visual dinámica (Curso vs Clase)
         if (Publicacion.TIPO_CURSO.equals(tipo)) {
             tvLabelExtra.setText("Archivo del curso:");
             tvExtra.setText(extra != null ? extra : "No disponible");
@@ -100,20 +99,34 @@ public class DetallePublicacion extends Fragment {
         view.findViewById(R.id.fabAtras).setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
         if (miId == idAutor) {
-            // SOY EL DUEÑO
             panelDueno.setVisibility(View.VISIBLE);
             panelCliente.setVisibility(View.GONE);
             panelAlumno.setVisibility(View.GONE);
             configurarPanelDueno(view);
         } else {
-            // SOY CLIENTE (Validamos si ya compré)
             verificarSiYaCompre(miId, panelCliente, panelAlumno, btnAccion);
+        }
+
+        // --- LÓGICA DEL BOTÓN CHAT (Hacer una pregunta) ---
+        View btnPreguntar = view.findViewById(R.id.btnContactarProfe);
+        if(btnPreguntar != null) {
+            // Si eres el dueño, oculta el botón de preguntar
+            if(miId == idAutor) {
+                btnPreguntar.setVisibility(View.GONE);
+            } else {
+                btnPreguntar.setVisibility(View.VISIBLE);
+                btnPreguntar.setOnClickListener(v -> {
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("otroId", idAutor);
+                    bundle.putString("otroNombre", autor);
+                    // IMPORTANTE: Usamos el ID definido en main_nav para el chat directo
+                    Navigation.findNavController(v).navigate(R.id.chatDirecto, bundle);
+                });
+            }
         }
     }
 
-    // --- LÓGICA DE VERIFICACIÓN DE COMPRA ---
     private void verificarSiYaCompre(int miId, View panelCompra, View panelAcceso, Button btnAccion) {
-        // Estado inicial: Asumimos que no lo tiene (mostramos botón de compra)
         panelCompra.setVisibility(View.VISIBLE);
         panelAcceso.setVisibility(View.GONE);
         configurarBotonCompra(btnAccion);
@@ -135,8 +148,6 @@ public class DetallePublicacion extends Fragment {
                     if (yaLoTengo) {
                         panelCompra.setVisibility(View.GONE);
                         panelAcceso.setVisibility(View.VISIBLE);
-
-                        // Configurar botón "Ver Contenido"
                         requireView().findViewById(R.id.btnVerContenido).setOnClickListener(v ->
                                 Toast.makeText(getContext(), "Abriendo contenido...", Toast.LENGTH_SHORT).show()
                         );
@@ -157,9 +168,7 @@ public class DetallePublicacion extends Fragment {
         }
     }
 
-    // --- LÓGICA DEL DUEÑO ---
     private void configurarPanelDueno(View view) {
-        // Editar
         view.findViewById(R.id.btnEditarCurso).setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putInt("idOriginal", idOriginal);
@@ -171,18 +180,17 @@ public class DetallePublicacion extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_editarPublicacion, bundle);
         });
 
-        // Eliminar
         view.findViewById(R.id.btnEliminar).setOnClickListener(v -> mostrarDialogoConfirmacion());
 
-        // Ver Alumnos (CORREGIDO)
         view.findViewById(R.id.btnVerAlumnos).setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putInt("idOriginal", idOriginal);
             bundle.putString("tipo", tipo);
-            Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_verAlumnos, bundle);
+            // Asegúrate de tener esta acción en tu nav graph si usas VerAlumnos
+            // Navigation.findNavController(v).navigate(R.id.action_detalle_to_alumnos, bundle);
+            Toast.makeText(getContext(), "Función ver alumnos", Toast.LENGTH_SHORT).show();
         });
 
-        // Gestionar Agenda (Solo si es Clase)
         View btnAgenda = view.findViewById(R.id.btnGestionarAgenda);
         if (Publicacion.TIPO_CURSO.equals(tipo)) {
             btnAgenda.setVisibility(View.GONE);
@@ -192,7 +200,8 @@ public class DetallePublicacion extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt("servicioId", idOriginal);
                 bundle.putInt("profesorId", idAutor);
-                Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_gestionarAgenda, bundle);
+                // Asegúrate de tener esta acción en tu nav graph
+                Navigation.findNavController(v).navigate(R.id.gestionarAgenda, bundle);
             });
         }
     }
@@ -219,9 +228,7 @@ public class DetallePublicacion extends Fragment {
                         Toast.makeText(getContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
                     }
                 }
-                @Override public void onFailure(Call<Void> call, Throwable t) {
-                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
-                }
+                @Override public void onFailure(Call<Void> call, Throwable t) {}
             });
         } else {
             ServicioApi api = RetrofitClient.getClient().create(ServicioApi.class);
@@ -235,14 +242,11 @@ public class DetallePublicacion extends Fragment {
                         Toast.makeText(getContext(), "Error al eliminar", Toast.LENGTH_SHORT).show();
                     }
                 }
-                @Override public void onFailure(Call<Void> call, Throwable t) {
-                    Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
-                }
+                @Override public void onFailure(Call<Void> call, Throwable t) {}
             });
         }
     }
 
-    // --- ACCIONES DE COMPRA ---
     private void iniciarCompra() {
         new AlertDialog.Builder(getContext())
                 .setTitle("Confirmar Compra")
@@ -257,7 +261,12 @@ public class DetallePublicacion extends Fragment {
         compra.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         compra.setPago(precio);
         compra.setUsuarioId(sessionManager.getUserId());
-        compra.setCursoId(idOriginal);
+
+        if (Publicacion.TIPO_CURSO.equals(tipo)) {
+            compra.setCursoId(idOriginal);
+        } else {
+            compra.setServicioId(idOriginal);
+        }
 
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
         api.crear(compra).enqueue(new Callback<HistorialDto>() {
@@ -265,7 +274,6 @@ public class DetallePublicacion extends Fragment {
             public void onResponse(Call<HistorialDto> call, Response<HistorialDto> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(getContext(), "¡Compra exitosa!", Toast.LENGTH_LONG).show();
-                    // Actualizamos la UI inmediatamente
                     requireView().findViewById(R.id.panelClienteCompra).setVisibility(View.GONE);
                     requireView().findViewById(R.id.panelAlumnoAcceso).setVisibility(View.VISIBLE);
                 } else {
@@ -273,7 +281,7 @@ public class DetallePublicacion extends Fragment {
                 }
             }
             @Override public void onFailure(Call<HistorialDto> call, Throwable t) {
-                Toast.makeText(getContext(), "Fallo de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -283,7 +291,7 @@ public class DetallePublicacion extends Fragment {
         bundle.putInt("servicioId", idOriginal);
         bundle.putInt("profesorId", idAutor);
         bundle.putString("titulo", titulo);
-        bundle.putDouble("precio", precio); // Enviamos el precio para el historial
-        Navigation.findNavController(requireView()).navigate(R.id.action_detallePublicacion_to_agendarClase, bundle);
+        bundle.putDouble("precio", precio);
+        Navigation.findNavController(requireView()).navigate(R.id.agendarClase, bundle);
     }
 }

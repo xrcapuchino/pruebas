@@ -1,6 +1,6 @@
 package com.example.saber_share.fragmentos.contenido;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,13 +15,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import com.example.saber_share.Cuenta;
 import com.example.saber_share.R;
 import com.example.saber_share.model.CursoDto;
-import com.example.saber_share.model.MetodoDePagoDto;
 import com.example.saber_share.model.ServicioDto;
 import com.example.saber_share.model.UsuarioDto;
 import com.example.saber_share.util.api.CursoApi;
-import com.example.saber_share.util.api.MetodoPagoApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
 import com.example.saber_share.util.api.UsuarioApi;
@@ -35,11 +34,14 @@ import retrofit2.Response;
 
 public class Perfil extends Fragment {
 
-    private SessionManager sessionManager;
-    private TextView tvNombre, tvCorreo, tvCountCursos, tvCountClases, tvMetodoPagoStatus;
-    private EditText etNombrePub, etApellidoPub, etCorreoPub;
-    private Button btnGuardar, btnGestionarTarjetas, btnHistorial, btnEstadisticas, btnCerrarSesion, btnVerAgenda;
+    // UI Elements
+    private EditText etNombre, etApellido, etCorreo;
+    private TextView tvNombreCompleto, tvCorreoPerfil, tvCountCursos, tvCountClases, tvMetodoPagoStatus;
+    private Button btnGuardar, btnCerrarSesion;
+    private Button btnHistorial, btnEstadisticas, btnVerAgenda, btnGestionarTarjetas;
 
+    private SessionManager sessionManager;
+    private int miId;
     private UsuarioDto usuarioActual;
 
     public Perfil() {}
@@ -52,187 +54,153 @@ public class Perfil extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        sessionManager = new SessionManager(requireContext());
 
-        // 1. Vincular Vistas
-        tvNombre = view.findViewById(R.id.tvNombrePerfil);
-        tvCorreo = view.findViewById(R.id.tvCorreoPerfil);
+        sessionManager = new SessionManager(requireContext());
+        miId = sessionManager.getUserId();
+
+        // 1. Vincular Vistas con los IDs de TU XML
+        etNombre = view.findViewById(R.id.etNombrePublico);
+        etApellido = view.findViewById(R.id.etApellidoPublico);
+        etCorreo = view.findViewById(R.id.etCorreoPublico);
+
+        tvNombreCompleto = view.findViewById(R.id.tvNombrePerfil);
+        tvCorreoPerfil = view.findViewById(R.id.tvCorreoPerfil);
         tvCountCursos = view.findViewById(R.id.tvCountCursos);
         tvCountClases = view.findViewById(R.id.tvCountClases);
         tvMetodoPagoStatus = view.findViewById(R.id.tvMetodoPagoStatus);
 
-        etNombrePub = view.findViewById(R.id.etNombrePublico);
-        // CORREGIDO: El ID debe coincidir con el XML nuevo
-        etApellidoPub = view.findViewById(R.id.etApellidoPublico);
-        etCorreoPub = view.findViewById(R.id.etCorreoPublico);
-
         btnGuardar = view.findViewById(R.id.btnGuardarPerfil);
-        btnGestionarTarjetas = view.findViewById(R.id.btnGestionarTarjetas);
+        btnCerrarSesion = view.findViewById(R.id.btnCerrarSesion);
+
         btnHistorial = view.findViewById(R.id.btnHistorial);
         btnEstadisticas = view.findViewById(R.id.btnEstadisticas);
-        btnCerrarSesion = view.findViewById(R.id.btnCerrarSesion);
         btnVerAgenda = view.findViewById(R.id.btnVerAgenda);
+        btnGestionarTarjetas = view.findViewById(R.id.btnGestionarTarjetas);
 
-        int userId = sessionManager.getUserId();
+        // 2. Cargar Datos
+        cargarDatosUsuario();
+        cargarEstadisticas();
 
-        // 2. Listeners
-        btnGuardar.setOnClickListener(v -> guardarCambios(userId));
-        btnCerrarSesion.setOnClickListener(v -> sessionManager.logoutUser());
+        // 3. Listeners
+        btnGuardar.setOnClickListener(v -> actualizarDatos());
+        btnCerrarSesion.setOnClickListener(v -> cerrarSesion());
 
-        btnGestionarTarjetas.setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(R.id.action_perfil_to_administrarTarjetas)
-        );
+        // Navegación (Asegúrate que estos IDs existan en main_nav.xml)
+        if(btnHistorial != null)
+            btnHistorial.setOnClickListener(v -> Navigation.findNavController(v).navigate(R.id.historial));
 
-        btnHistorial.setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(R.id.action_perfil_to_historial)
-        );
+        if(btnEstadisticas != null) {
+            btnEstadisticas.setOnClickListener(v ->
+                    Navigation.findNavController(v).navigate(R.id.estadisticasFragment)
+            );
+        }
 
-        btnVerAgenda.setOnClickListener(v ->
-                Navigation.findNavController(v).navigate(R.id.action_perfil_to_misClases)
-        );
+        if(btnVerAgenda != null)
+            btnVerAgenda.setOnClickListener(v -> {
+                // Navegar a la agenda personal del usuario (si es profesor)
+                Bundle b = new Bundle();
+                b.putInt("profesorId", miId);
+                // Asegúrate de tener la acción o destino correcto
+                Navigation.findNavController(v).navigate(R.id.gestionarAgenda, b);
+            });
 
-        btnEstadisticas.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Próximamente", Toast.LENGTH_SHORT).show()
-        );
-
-        // 3. Cargar Datos
-        cargarDatosUsuario(userId);
-        cargarConteoCursos(userId);
-        cargarConteoServicios(userId);
-        verificarTarjetas(userId);
+        if(btnGestionarTarjetas != null)
+            btnGestionarTarjetas.setOnClickListener(v -> {
+                // Navegar a administrar tarjetas
+                // Navigation.findNavController(v).navigate(R.id.administrarTarjetas);
+                Toast.makeText(getContext(), "Gestión de tarjetas", Toast.LENGTH_SHORT).show();
+            });
     }
 
-    private void cargarDatosUsuario(int userId) {
+    private void cargarDatosUsuario() {
         UsuarioApi api = RetrofitClient.getClient().create(UsuarioApi.class);
-
-        // NOTA: Si tu UsuarioApi no tiene getById, avísame. Debería tenerlo.
-        api.getById(userId).enqueue(new Callback<UsuarioDto>() {
+        api.getById(miId).enqueue(new Callback<UsuarioDto>() {
             @Override
             public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     usuarioActual = response.body();
 
-                    // USAMOS LOS NOMBRES QUE ESTÁN EN TU DTO (nomUsu, apeUsu)
-                    // Si te marca rojo, cambia a getNombre() y getApellido()
-                    String nombre = usuarioActual.getNombre();
-                    String apellido = usuarioActual.getApellido();
-                    String correo = usuarioActual.getCorreo();
+                    if(etNombre != null) etNombre.setText(usuarioActual.getNombre());
+                    if(etApellido != null) etApellido.setText(usuarioActual.getApellido());
+                    if(etCorreo != null) etCorreo.setText(usuarioActual.getCorreo());
 
-                    if(nombre == null) nombre = "";
-                    if(apellido == null) apellido = "";
-
-                    tvNombre.setText(nombre + " " + apellido);
-                    tvCorreo.setText(correo);
-
-                    etNombrePub.setText(nombre);
-                    etApellidoPub.setText(apellido);
-                    etCorreoPub.setText(correo);
-                }
-            }
-            @Override
-            public void onFailure(Call<UsuarioDto> call, Throwable t) {
-                Toast.makeText(getContext(), "Fallo red perfil", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void guardarCambios(int userId) {
-        if(usuarioActual == null) return;
-
-        String nuevoNombre = etNombrePub.getText().toString().trim();
-        String nuevoApellido = etApellidoPub.getText().toString().trim();
-        String nuevoCorreo = etCorreoPub.getText().toString().trim();
-
-        if(nuevoNombre.isEmpty() || nuevoCorreo.isEmpty()) {
-            Toast.makeText(getContext(), "Faltan datos", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Actualizamos DTO (Adaptado a tus variables)
-        usuarioActual.setNombre(nuevoNombre);
-        usuarioActual.setApellido(nuevoApellido);
-        usuarioActual.setCorreo(nuevoCorreo);
-
-        UsuarioApi api = RetrofitClient.getClient().create(UsuarioApi.class);
-        api.update(userId, usuarioActual).enqueue(new Callback<UsuarioDto>() {
-            @Override
-            public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
-                if(response.isSuccessful()) {
-                    Toast.makeText(getContext(), "Guardado", Toast.LENGTH_SHORT).show();
-                    tvNombre.setText(nuevoNombre + " " + nuevoApellido);
-                    tvCorreo.setText(nuevoCorreo);
-                } else {
-                    Toast.makeText(getContext(), "Error guardando", Toast.LENGTH_SHORT).show();
+                    // Actualizar Header
+                    if(tvNombreCompleto != null)
+                        tvNombreCompleto.setText(usuarioActual.getNombre() + " " + usuarioActual.getApellido());
+                    if(tvCorreoPerfil != null)
+                        tvCorreoPerfil.setText(usuarioActual.getCorreo());
                 }
             }
             @Override public void onFailure(Call<UsuarioDto> call, Throwable t) {
-                Toast.makeText(getContext(), "Error conexión", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Error cargando perfil", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void cargarConteoCursos(int userId) {
-        CursoApi api = RetrofitClient.getClient().create(CursoApi.class);
-        // USAMOS lista() COMO PEDISTE
-        api.lista().enqueue(new Callback<List<CursoDto>>() {
+    private void cargarEstadisticas() {
+        CursoApi cursoApi = RetrofitClient.getClient().create(CursoApi.class);
+        cursoApi.lista().enqueue(new Callback<List<CursoDto>>() {
             @Override
             public void onResponse(Call<List<CursoDto>> call, Response<List<CursoDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    long count = 0;
+                    int count = 0;
                     for (CursoDto c : response.body()) {
-                        if (c.getUsuarioId() != null && c.getUsuarioId() == userId) count++;
+                        if (c.getUsuarioId() == miId) count++;
                     }
-                    tvCountCursos.setText(String.valueOf(count));
+                    if(tvCountCursos != null) tvCountCursos.setText(String.valueOf(count));
                 }
             }
-            @Override public void onFailure(Call<List<CursoDto>> call, Throwable t) { tvCountCursos.setText("-"); }
+            @Override public void onFailure(Call<List<CursoDto>> call, Throwable t) {}
         });
-    }
 
-    private void cargarConteoServicios(int userId) {
-        ServicioApi api = RetrofitClient.getClient().create(ServicioApi.class);
-        // USAMOS lista() COMO PEDISTE
-        api.lista().enqueue(new Callback<List<ServicioDto>>() {
+        ServicioApi servicioApi = RetrofitClient.getClient().create(ServicioApi.class);
+        servicioApi.lista().enqueue(new Callback<List<ServicioDto>>() {
             @Override
             public void onResponse(Call<List<ServicioDto>> call, Response<List<ServicioDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    long count = 0;
+                    int count = 0;
                     for (ServicioDto s : response.body()) {
-                        if (s.getUsuarioId() != null && s.getUsuarioId() == userId) count++;
+                        if (s.getUsuarioId() == miId) count++;
                     }
-                    tvCountClases.setText(String.valueOf(count));
+                    if(tvCountClases != null) tvCountClases.setText(String.valueOf(count));
                 }
             }
-            @Override public void onFailure(Call<List<ServicioDto>> call, Throwable t) { tvCountClases.setText("-"); }
+            @Override public void onFailure(Call<List<ServicioDto>> call, Throwable t) {}
         });
     }
 
-    private void verificarTarjetas(int userId) {
-        MetodoPagoApi api = RetrofitClient.getClient().create(MetodoPagoApi.class);
-        api.listarTarjetas().enqueue(new Callback<List<MetodoDePagoDto>>() {
+    private void actualizarDatos() {
+        if (usuarioActual == null) return;
+
+        usuarioActual.setNombre(etNombre.getText().toString());
+        usuarioActual.setApellido(etApellido.getText().toString());
+        usuarioActual.setCorreo(etCorreo.getText().toString());
+
+        UsuarioApi api = RetrofitClient.getClient().create(UsuarioApi.class);
+        // Nota: Asegúrate que tu API soporte update(id, body)
+        api.update(miId, usuarioActual).enqueue(new Callback<UsuarioDto>() {
             @Override
-            public void onResponse(Call<List<MetodoDePagoDto>> call, Response<List<MetodoDePagoDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    boolean tiene = false;
-                    String digitos = "xxxx";
-                    for (MetodoDePagoDto m : response.body()) {
-                        if (m.getUsuarioId() == userId) {
-                            tiene = true;
-                            if(m.getNumeroTarjeta() != null && m.getNumeroTarjeta().length() > 4)
-                                digitos = m.getNumeroTarjeta().substring(m.getNumeroTarjeta().length()-4);
-                            break;
-                        }
-                    }
-                    if (tiene) {
-                        tvMetodoPagoStatus.setText("Terminada en " + digitos);
-                        tvMetodoPagoStatus.setTextColor(Color.parseColor("#4CAF50"));
-                    } else {
-                        tvMetodoPagoStatus.setText("(Sin tarjeta)");
-                        tvMetodoPagoStatus.setTextColor(Color.parseColor("#7A7A7A"));
-                    }
+            public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show();
+                    // Refrescar textos estáticos
+                    tvNombreCompleto.setText(usuarioActual.getNombre() + " " + usuarioActual.getApellido());
+                    tvCorreoPerfil.setText(usuarioActual.getCorreo());
+                } else {
+                    Toast.makeText(getContext(), "Error al actualizar", Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override public void onFailure(Call<List<MetodoDePagoDto>> call, Throwable t) {}
+            @Override public void onFailure(Call<UsuarioDto> call, Throwable t) {
+                Toast.makeText(getContext(), "Fallo de conexión", Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    private void cerrarSesion() {
+        sessionManager.logoutUser();
+        Intent intent = new Intent(getActivity(), Cuenta.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 }

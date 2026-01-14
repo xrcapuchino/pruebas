@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@android:color/white"
     android:orientation="vertical"
     android:padding="20dp">
 
@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="HOLA DE NUEVO CHOCO"
+            android:text="HOLA DE NUEVO..."
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#20232A"
@@ -48,9 +48,9 @@
         <EditText
             android:id="@+id/etBuscarComprar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
     </com.google.android.material.textfield.TextInputLayout>
-
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -64,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:singleLine="true"
-            app:chipSpacingHorizontal="8dp"> <!-- Espaciado para que no se amontonen -->
+            app:chipSpacingHorizontal="8dp">
 
             <com.google.android.material.chip.Chip
                 style="@style/Widget.Material3.Chip.Filter"
@@ -92,19 +92,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:chipBackgroundColor="@color/color_chip"
-
                 android:text="Música" />
-
-            <!-- Agrega más para probar el scroll -->
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvResultadosBusqueda"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-    />
+        android:layout_weight="1"/>
 
 </LinearLayout>

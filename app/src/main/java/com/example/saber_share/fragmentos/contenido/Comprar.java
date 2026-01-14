@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,14 +19,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.saber_share.R;
 import com.example.saber_share.fragmentos.contenido.adapter.PublicacionAdapter;
 import com.example.saber_share.model.CursoDto;
-import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.model.Publicacion;
 import com.example.saber_share.model.ServicioDto;
+import com.example.saber_share.model.UsuarioDto;
 import com.example.saber_share.util.api.CursoApi;
-import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.api.ServicioApi;
+import com.example.saber_share.util.api.UsuarioApi;
 import com.example.saber_share.util.local.SessionManager;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +41,16 @@ public class Comprar extends Fragment {
 
     private RecyclerView rvResultados;
     private EditText etBuscar;
+    private TextView tvSaludo;
+    private ChipGroup cgCategorias;
+
     private PublicacionAdapter adapter;
     private List<Publicacion> listaGlobal = new ArrayList<>();
     private SessionManager sessionManager;
+
+    // Estado actual de filtros
+    private String textoBusqueda = "";
+    private String categoriaFiltro = "Top"; // Por defecto "Top" o "Todos"
 
     public Comprar() {}
 
@@ -55,57 +64,90 @@ public class Comprar extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         sessionManager = new SessionManager(requireContext());
+        int miId = sessionManager.getUserId();
 
         rvResultados = view.findViewById(R.id.rvResultadosBusqueda);
         etBuscar = view.findViewById(R.id.etBuscarComprar);
+        tvSaludo = view.findViewById(R.id.tvSaludo);
+        cgCategorias = view.findViewById(R.id.cgCategorias);
 
         rvResultados.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        // --- CORRECCIÓN DEL CONSTRUCTOR ---
-        // Ahora usamos el constructor que coincide con PublicacionAdapter (List, Listener)
-        adapter = new PublicacionAdapter(
-                listaGlobal,
-                this::irADetalle
-        );
-
+        adapter = new PublicacionAdapter(getContext(), new ArrayList<>(), miId, this::irADetalle);
         rvResultados.setAdapter(adapter);
 
-        // 1. Cargar el historial primero para saber qué pintar de verde
-        cargarMisCompras();
-
-        // 2. Cargar los cursos y clases
         cargarDatos();
+        cargarNombreUsuario(miId);
 
-        // Buscador
+        // 1. Listener de Buscador (Texto)
         etBuscar.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (adapter != null) adapter.filtrar(s.toString());
+                textoBusqueda = s.toString();
+                aplicarFiltros();
             }
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        // 2. Listener de Chips (Categorías)
+        cgCategorias.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (!checkedIds.isEmpty()) {
+                Chip chip = group.findViewById(checkedIds.get(0));
+                if (chip != null) {
+                    categoriaFiltro = chip.getText().toString();
+                    aplicarFiltros();
+                }
+            }
         });
     }
 
-    private void cargarMisCompras() {
-        int userId = sessionManager.getUserId();
-        HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
-        api.historialPorUsuario(userId).enqueue(new Callback<List<HistorialDto>>() {
-            @Override
-            public void onResponse(Call<List<HistorialDto>> call, Response<List<HistorialDto>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Integer> idsComprados = new ArrayList<>();
-                    for (HistorialDto h : response.body()) {
-                        if (h.getCursoId() != null) idsComprados.add(h.getCursoId());
-                        if (h.getServicioId() != null) idsComprados.add(h.getServicioId());
-                    }
-                    // Le decimos al adaptador qué IDs tenemos
-                    adapter.setIdsComprados(idsComprados);
+    private void aplicarFiltros() {
+        List<Publicacion> listaFiltrada = new ArrayList<>();
+
+        for (Publicacion p : listaGlobal) {
+            boolean coincideTexto = true;
+            boolean coincideCategoria = true;
+
+            // Filtro Texto
+            if (!textoBusqueda.isEmpty()) {
+                if (!p.getTitulo().toLowerCase().contains(textoBusqueda.toLowerCase()) &&
+                        !p.getDescripcion().toLowerCase().contains(textoBusqueda.toLowerCase())) {
+                    coincideTexto = false;
                 }
             }
-            @Override public void onFailure(Call<List<HistorialDto>> call, Throwable t) {}
+
+            // Filtro Categoría (Simulado)
+            if (!categoriaFiltro.equals("Top") && !categoriaFiltro.equals("Todos")) {
+                // Buscamos si la categoría aparece en título o descripción
+                // Ejemplo: Si filtro es "Programación", buscamos esa palabra
+                String todoTexto = (p.getTitulo() + " " + p.getDescripcion()).toLowerCase();
+
+                // Mapeo simple de categorías a palabras clave
+                String keyword = categoriaFiltro.toLowerCase();
+                if(keyword.equals("programación")) keyword = "java"; // Ajuste para demo
+
+                if (!todoTexto.contains(keyword)) {
+                    coincideCategoria = false;
+                }
+            }
+
+            if (coincideTexto && coincideCategoria) {
+                listaFiltrada.add(p);
+            }
+        }
+        adapter.setDatos(listaFiltrada);
+    }
+
+    private void cargarNombreUsuario(int id) {
+        UsuarioApi api = RetrofitClient.getClient().create(UsuarioApi.class);
+        api.getById(id).enqueue(new Callback<UsuarioDto>() {
+            @Override
+            public void onResponse(Call<UsuarioDto> call, Response<UsuarioDto> response) {
+                if(response.isSuccessful() && response.body() != null){
+                    tvSaludo.setText("HOLA DE NUEVO " + response.body().getNombre().toUpperCase());
+                }
+            }
+            @Override public void onFailure(Call<UsuarioDto> call, Throwable t) {}
         });
     }
 
@@ -120,73 +162,44 @@ public class Comprar extends Fragment {
         bundle.putString("autor", p.getAutor());
         bundle.putString("calificacion", p.getCalificacion());
         bundle.putString("extra", p.getExtraInfo());
-
         Navigation.findNavController(requireView()).navigate(R.id.detallePublicacion, bundle);
     }
 
     private void cargarDatos() {
         listaGlobal.clear();
-
-        CursoApi cursoApi = RetrofitClient.getClient().create(CursoApi.class);
-        cursoApi.lista().enqueue(new Callback<List<CursoDto>>() {
+        RetrofitClient.getClient().create(CursoApi.class).lista().enqueue(new Callback<List<CursoDto>>() {
             @Override
             public void onResponse(Call<List<CursoDto>> call, Response<List<CursoDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     for (CursoDto c : response.body()) {
                         listaGlobal.add(new Publicacion(
-                                Publicacion.TIPO_CURSO,
-                                c.getIdCurso(),
-                                c.getTitulo(),
-                                c.getDescripcion(),
-                                c.getPrecio(),
-                                c.getNombreUsuario(),
-                                c.getCalificacion(),
-                                null,        // 8. ImagenUrl (Null, adapter usa dummy)
-                                c.getFoto(), // 9. ExtraInfo (Aquí guardamos el ARCHIVO/RUTA)
-                                c.getUsuarioId()
+                                Publicacion.TIPO_CURSO, c.getIdCurso(), c.getTitulo(), c.getDescripcion(),
+                                c.getPrecio(), c.getNombreUsuario(), c.getCalificacion(), null, c.getFoto(), c.getUsuarioId()
                         ));
                     }
-                    adapter.setDatos(listaGlobal);
+                    aplicarFiltros(); // Actualizar UI
                 }
                 cargarServicios();
             }
-
-            @Override
-            public void onFailure(Call<List<CursoDto>> call, Throwable t) {
-                cargarServicios();
-            }
+            @Override public void onFailure(Call<List<CursoDto>> call, Throwable t) { cargarServicios(); }
         });
     }
 
     private void cargarServicios() {
-        ServicioApi servicioApi = RetrofitClient.getClient().create(ServicioApi.class);
-        servicioApi.lista().enqueue(new Callback<List<ServicioDto>>() {
+        RetrofitClient.getClient().create(ServicioApi.class).lista().enqueue(new Callback<List<ServicioDto>>() {
             @Override
             public void onResponse(Call<List<ServicioDto>> call, Response<List<ServicioDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     for (ServicioDto s : response.body()) {
                         listaGlobal.add(new Publicacion(
-                                Publicacion.TIPO_CLASE,
-                                s.getServicioId(),
-                                s.getTitulo(),
-                                s.getDescripcion(),
-                                s.getPrecio(),
-                                s.getNombreUsuario(),
-                                "N/A",              // 7. Calificación (Corregido: Antes era requisitos)
-                                null,               // 8. ImagenUrl (Null porque el Adapter usa imágenes dummy)
-                                s.getRequisitos(),  // 9. ExtraInfo (Aquí van los REQUISITOS)
-                                s.getUsuarioId()    // 10. IdAutor
+                                Publicacion.TIPO_CLASE, s.getServicioId(), s.getTitulo(), s.getDescripcion(),
+                                s.getPrecio(), s.getNombreUsuario(), "N/A", null, s.getRequisitos(), s.getUsuarioId()
                         ));
                     }
-                    adapter.setDatos(listaGlobal);
+                    aplicarFiltros(); // Actualizar UI final
                 }
             }
-            @Override
-            public void onFailure(Call<List<ServicioDto>> call, Throwable t) {
-                if(listaGlobal.isEmpty()) {
-                    Toast.makeText(getContext(), "No se pudieron cargar las publicaciones", Toast.LENGTH_SHORT).show();
-                }
-            }
+            @Override public void onFailure(Call<List<ServicioDto>> call, Throwable t) {}
         });
     }
 }
