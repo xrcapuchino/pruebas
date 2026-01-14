@@ -18,12 +18,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.saber_share.R;
 import com.example.saber_share.fragmentos.contenido.adapter.AgendaAdapter;
 import com.example.saber_share.model.AgendaDto;
+import com.example.saber_share.model.HistorialDto;
 import com.example.saber_share.util.api.AgendaApi;
+import com.example.saber_share.util.api.HistorialApi;
 import com.example.saber_share.util.api.RetrofitClient;
 import com.example.saber_share.util.local.SessionManager;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,6 +39,7 @@ public class AgendarClase extends Fragment {
     private RecyclerView rvHorarios;
     private TextView tvSubtitulo, tvVacio;
     private SessionManager sessionManager;
+    private double precioClase;
 
     // Variables recibidas del Bundle
     private int servicioId;
@@ -58,10 +64,10 @@ public class AgendarClase extends Fragment {
 
         if (getArguments() != null) {
             servicioId = getArguments().getInt("servicioId", -1);
-            profesorId = getArguments().getInt("profesorId", -1);
             tituloServicio = getArguments().getString("titulo", "Clase");
+            precioClase = getArguments().getDouble("precio", 0.0); // Recibimos precio
 
-            tvSubtitulo.setText(tituloServicio);
+            tvSubtitulo.setText("Horarios para: " + tituloServicio);
         }
         rvHorarios.setLayoutManager(new LinearLayoutManager(getContext()));
         cargarHorariosDisponibles();
@@ -138,8 +144,52 @@ public class AgendarClase extends Fragment {
                 mostrarMensaje("Fallo de red al reservar");
             }
         });
+
+    }
+    private void reservar(AgendaDto slot) {
+        AgendaApi api = RetrofitClient.getClient().create(AgendaApi.class);
+        api.reservarSlot(slot.getIdAgenda(), sessionManager.getUserId()).enqueue(new Callback<AgendaDto>() {
+            @Override
+            public void onResponse(Call<AgendaDto> call, Response<AgendaDto> response) {
+                if (response.isSuccessful()) {
+                    // SI LA RESERVA FUE EXITOSA -> GUARDAMOS EN HISTORIAL
+                    guardarEnHistorial(slot);
+                } else {
+                    Toast.makeText(getContext(), "Error al reservar", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<AgendaDto> call, Throwable t) {
+                Toast.makeText(getContext(), "Fallo de red", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
+    private void guardarEnHistorial(AgendaDto slot) {
+        HistorialDto historial = new HistorialDto();
+        historial.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        historial.setPago(precioClase);
+        historial.setUsuarioId(sessionManager.getUserId());
+        historial.setServicioId(servicioId); // Es una clase (servicio)
+        historial.setCursoId(null);
+
+        HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
+        api.crear(historial).enqueue(new Callback<HistorialDto>() {
+            @Override
+            public void onResponse(Call<HistorialDto> call, Response<HistorialDto> response) {
+                // Ya sea que falle o no el historial, la reserva ya se hizo, asi que sacamos al usuario
+                Toast.makeText(getContext(), "¡Clase Agendada y Registrada!", Toast.LENGTH_LONG).show();
+                Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
+            }
+
+            @Override
+            public void onFailure(Call<HistorialDto> call, Throwable t) {
+                // Si falla el historial pero la reserva quedó, avisamos pero salimos igual
+                Toast.makeText(getContext(), "Clase reservada (Error al guardar historial)", Toast.LENGTH_LONG).show();
+                Navigation.findNavController(requireView()).popBackStack(R.id.inicio, false);
+            }
+        });
+    }
     private void mostrarMensaje(String msg) {
         if(getContext() != null) Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }

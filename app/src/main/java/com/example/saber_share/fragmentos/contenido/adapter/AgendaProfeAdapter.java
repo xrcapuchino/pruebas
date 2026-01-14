@@ -1,29 +1,28 @@
 package com.example.saber_share.fragmentos.contenido.adapter;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.saber_share.R;
 import com.example.saber_share.model.AgendaDto;
-
 import java.util.List;
 
-public class AgendaAdapter extends RecyclerView.Adapter<AgendaAdapter.ViewHolder> {
+public class AgendaProfeAdapter extends RecyclerView.Adapter<AgendaProfeAdapter.ViewHolder> {
 
     private List<AgendaDto> slots;
-    private OnSlotClickListener listener;
+    private OnSlotActionListener listener;
 
-    public interface OnSlotClickListener {
-        void onReservarClick(AgendaDto slot);
+    public interface OnSlotActionListener {
+        void onEliminarClick(int idAgenda);
+        void onVerDetalleClick(AgendaDto slot); // <--- NUEVO MÉTODO
     }
 
-    public AgendaAdapter(List<AgendaDto> slots, OnSlotClickListener listener) {
+    public AgendaProfeAdapter(List<AgendaDto> slots, OnSlotActionListener listener) {
         this.slots = slots;
         this.listener = listener;
     }
@@ -39,28 +38,38 @@ public class AgendaAdapter extends RecyclerView.Adapter<AgendaAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AgendaDto slot = slots.get(position);
 
-        String titulo = slot.getTituloServicio() != null ? slot.getTituloServicio() : "Clase 1 a 1";
-        holder.tvTitulo.setText(titulo);
-
         holder.tvFecha.setText(slot.getFecha());
         holder.tvHora.setText(slot.getHora());
 
-        holder.btnReservar.setOnClickListener(v -> listener.onReservarClick(slot));
+        if ("RESERVADA".equalsIgnoreCase(slot.getEstado())) {
+            holder.btnAccion.setText("Ver Alumno"); // Cambiamos texto
+            holder.btnAccion.setEnabled(true);      // Ahora SI está habilitado
+            holder.btnAccion.setBackgroundColor(Color.parseColor("#4CAF50")); // Verde
+
+            // Acción: Ver detalle
+            holder.btnAccion.setOnClickListener(v -> listener.onVerDetalleClick(slot));
+
+        } else {
+            holder.btnAccion.setText("Eliminar");
+            holder.btnAccion.setEnabled(true);
+            holder.btnAccion.setBackgroundColor(Color.parseColor("#D32F2F")); // Rojo
+
+            // Acción: Eliminar
+            holder.btnAccion.setOnClickListener(v -> listener.onEliminarClick(slot.getIdAgenda()));
+        }
     }
-// ...
 
     @Override
     public int getItemCount() { return slots.size(); }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitulo, tvFecha, tvHora;
-        Button btnReservar;
-
+        TextView tvFecha, tvHora;
+        Button btnAccion;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvFecha = itemView.findViewById(R.id.tvFechaSlot);
             tvHora = itemView.findViewById(R.id.tvHoraSlot);
-            btnReservar = itemView.findViewById(R.id.btnReservarSlot);
+            btnAccion = itemView.findViewById(R.id.btnReservarSlot);
         }
     }
 }

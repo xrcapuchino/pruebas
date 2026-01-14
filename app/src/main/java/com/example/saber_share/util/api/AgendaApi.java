@@ -17,6 +17,9 @@ public interface AgendaApi {
     @GET("agenda/servicio/{idServicio}")
     Call<List<AgendaDto>> getSlotsPorServicio(@Path("idServicio") int idServicio);
 
+    @GET("agenda/usuario/{idUsuario}")
+    Call<List<AgendaDto>> getMisAgendas(@Path("idUsuario") int idUsuario);
+
     @POST("agenda")
     Call<AgendaDto> crearSlot(@Body AgendaDto slot);
 

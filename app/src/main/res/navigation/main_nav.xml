@@ -26,6 +26,9 @@
         <action
             android:id="@+id/action_perfil_to_historial"
             app:destination="@id/historial" />
+        <action
+            android:id="@+id/action_perfil_to_misClases"
+            app:destination="@id/misClases" />
     </fragment>
     <fragment
         android:id="@+id/vender"
@@ -62,6 +65,9 @@
         <action
             android:id="@+id/action_detallePublicacion_to_agendarClase"
             app:destination="@id/agendarClase" />
+        <action
+            android:id="@+id/action_detallePublicacion_to_gestionarAgenda"
+            app:destination="@id/gestionarAgenda" />
     </fragment>
     <fragment
         android:id="@+id/editarPublicacion"
@@ -104,6 +110,16 @@
         android:name="com.example.saber_share.fragmentos.contenido.AgendarClase"
         tools:layout="@layout/fragment_main_agendar_clase"
         android:label="AgendarClase" />
+    <fragment
+        android:id="@+id/gestionarAgenda"
+        android:name="com.example.saber_share.fragmentos.contenido.GestionarAgenda"
+        tools:layout="@layout/fragment_main_gestionar_agenda"
+        android:label="GestionarAgenda" />
+    <fragment
+        android:id="@+id/misClases"
+        android:name="com.example.saber_share.fragmentos.contenido.MisClases"
+        tools:layout="@layout/fragment_main_agregar_tarjeta"
+        android:label="MisClases" />
 
 
 </navigation>

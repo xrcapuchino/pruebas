@@ -90,7 +90,7 @@
                 style="@style/Widget.Material3.Button"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Iniciar sesión"
+                android:text="Iniciar sesion"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textSize="16sp"

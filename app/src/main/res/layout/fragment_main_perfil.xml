@@ -246,6 +246,15 @@
         </LinearLayout>
 
         <Button
+            android:id="@+id/btnVerAgenda"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Ver Agenda"
+            app:backgroundTint="#2E70FF"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
             android:id="@+id/btnCerrarSesion"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"

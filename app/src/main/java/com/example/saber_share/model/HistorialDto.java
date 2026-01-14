@@ -4,24 +4,24 @@ import com.google.gson.annotations.SerializedName;
 
 public class HistorialDto {
     private Integer idHistorial;
+
     private String fechapago;
     private Double pago;
 
-    // Mapeo JSON por si el backend manda "usuario_idUsuario" o "usuarioId"
     @SerializedName(value = "usuarioId", alternate = {"usuario_idUsuario", "Usuario_idUsuario"})
     private Integer usuarioId;
 
+    @SerializedName(value = "servicioId", alternate = {"servicio_idServicios", "Servicio_idServicios"})
     private Integer servicioId;
+
+    @SerializedName(value = "cursoId", alternate = {"curso_idCurso", "Curso_idCurso"})
     private Integer cursoId;
 
-    // CAMPOS NUEVOS (Necesarios para el Adaptador)
-    // El backend debe enviarlos, o vendrán null y manejaremos eso en el adapter
     private String tituloCurso;
     private String tituloServicio;
 
     public HistorialDto() {}
 
-    // Getters y Setters
     public Integer getIdHistorial() { return idHistorial; }
     public void setIdHistorial(Integer idHistorial) { this.idHistorial = idHistorial; }
 

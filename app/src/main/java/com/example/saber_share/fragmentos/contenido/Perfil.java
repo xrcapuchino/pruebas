@@ -31,7 +31,7 @@ public class Perfil extends Fragment {
     private SessionManager sessionManager;
     private TextView tvNombre, tvCorreo, tvCountCursos, tvCountClases, tvMetodoPagoStatus;
     private EditText etNombrePub, etCorreoPub;
-    private Button btnGestionarTarjetas, btnHistorial, btnEstadisticas, btnCerrarSesion;
+    private Button btnGestionarTarjetas, btnHistorial, btnEstadisticas, btnCerrarSesion, btnVerAgenda;
 
     public Perfil() {}
 
@@ -59,10 +59,8 @@ public class Perfil extends Fragment {
         btnHistorial = view.findViewById(R.id.btnHistorial);
         btnEstadisticas = view.findViewById(R.id.btnEstadisticas);
         btnCerrarSesion = view.findViewById(R.id.btnCerrarSesion);
+        btnVerAgenda = view.findViewById(R.id.btnVerAgenda);
 
-        // 2. Llenar datos del usuario (Simulado o desde SessionManager)
-        // Nota: Idealmente tu SessionManager debería tener getNombre(), getCorreo()
-        // Por ahora usamos placeholders o el ID
         int userId = sessionManager.getUserId();
         String usuarioEjemplo = "Usuario " + userId;
         String correoEjemplo = "usuario" + userId + "@sabershare.com";
@@ -84,6 +82,10 @@ public class Perfil extends Fragment {
 
         btnEstadisticas.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Módulo Estadísticas pendiente", Toast.LENGTH_SHORT).show()
+        );
+
+        btnVerAgenda.setOnClickListener(v ->
+                Navigation.findNavController(v).navigate(R.id.action_perfil_to_misClases)
         );
 
         verificarTarjetas(userId);

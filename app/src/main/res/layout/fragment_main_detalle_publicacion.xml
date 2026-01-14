@@ -4,15 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="@color/white"
-    >
+    android:background="#F6F8FB">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header con Imagen -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="240dp">
@@ -24,7 +22,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/img" />
 
-            <!-- Botón Atrás Flotante -->
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fabAtras"
                 android:layout_width="wrap_content"
@@ -35,7 +32,6 @@
                 android:contentDescription="Atrás"
                 android:layout_gravity="top|start"/>
 
-            <!-- Etiqueta de Precio -->
             <TextView
                 android:id="@+id/tvDetallePrecio"
                 android:layout_width="wrap_content"
@@ -57,17 +53,14 @@
             android:orientation="vertical"
             android:padding="24dp"
             android:background="@drawable/bg_chip"
-            android:layout_marginTop="-20dp"> <!-- Efecto de tarjeta solapada -->
-
-            <!-- Título y Autor -->
-            <TextView
-                android:id="@+id/tvDetalleTitulo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Título del Curso"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="#20232A" />
+            android:layout_marginTop="-20dp"> <TextView
+            android:id="@+id/tvDetalleTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Título del Curso"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="#20232A" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -101,7 +94,6 @@
                 android:background="#E0E0E0"
                 android:layout_marginVertical="20dp" />
 
-            <!-- Descripción -->
             <TextView
                 android:text="Acerca de este curso"
                 android:textStyle="bold"
@@ -119,7 +111,6 @@
                 android:layout_marginTop="8dp"
                 android:textColor="#4A4A4A" />
 
-            <!-- Información Adicional (Dinámica) -->
             <TextView
                 android:id="@+id/tvLabelExtra"
                 android:text="Requisitos / Archivo"
@@ -146,9 +137,6 @@
                 android:background="#E0E0E0"
                 android:layout_marginVertical="20dp" />
 
-            <!-- ÁREA DE ACCIONES -->
-
-            <!-- 1. Panel del DUEÑO -->
             <LinearLayout
                 android:id="@+id/panelDueno"
                 android:layout_width="match_parent"
@@ -174,6 +162,15 @@
                     app:cornerRadius="12dp"/>
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGestionarAgenda"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="Gestionar Horarios"
+                    app:backgroundTint="#4CAF50"
+                    app:cornerRadius="12dp"
+                    android:layout_marginTop="8dp"/>
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnVerAlumnos"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
@@ -181,7 +178,6 @@
                     android:text="Ver alumnos inscritos"
                     android:layout_marginTop="8dp"/>
 
-                <!-- BOTÓN ELIMINAR (¡AGREGADO!) -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnEliminar"
                     style="@style/Widget.Material3.Button.OutlinedButton"
@@ -193,7 +189,6 @@
                     android:layout_marginTop="8dp"/>
             </LinearLayout>
 
-            <!-- 2. Panel del CLIENTE (Antes de comprar) -->
             <LinearLayout
                 android:id="@+id/panelClienteCompra"
                 android:layout_width="match_parent"
@@ -220,7 +215,6 @@
                     android:textColor="#2E70FF"/>
             </LinearLayout>
 
-            <!-- 3. Panel del ALUMNO (Ya comprado) -->
             <LinearLayout
                 android:id="@+id/panelAlumnoAcceso"
                 android:layout_width="match_parent"

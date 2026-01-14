@@ -87,7 +87,6 @@ public class DetallePublicacion extends Fragment {
             tvExtra.setText(extra != null ? extra : "Sin requisitos");
         }
 
-        // 2. Control de Paneles (Dueño vs Cliente)
         LinearLayout panelDueno = view.findViewById(R.id.panelDueno);
         LinearLayout panelCliente = view.findViewById(R.id.panelClienteCompra);
         LinearLayout panelAlumno = view.findViewById(R.id.panelAlumnoAcceso);
@@ -96,15 +95,12 @@ public class DetallePublicacion extends Fragment {
         view.findViewById(R.id.fabAtras).setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
         if (miId == idAutor) {
-            // SOY EL DUEÑO
             panelDueno.setVisibility(View.VISIBLE);
             panelCliente.setVisibility(View.GONE);
             panelAlumno.setVisibility(View.GONE);
             configurarPanelDueno(view);
         } else {
-            // SOY CLIENTE (O ALUMNO)
             panelDueno.setVisibility(View.GONE);
-            // TODO: Aquí idealmente verificarías con la API si el usuario ya compró para mostrar panelAlumno
             panelCliente.setVisibility(View.VISIBLE);
             panelAlumno.setVisibility(View.GONE);
 
@@ -139,6 +135,17 @@ public class DetallePublicacion extends Fragment {
 
         view.findViewById(R.id.btnVerAlumnos).setOnClickListener(v ->
                 Toast.makeText(getContext(), "Ver lista de alumnos (Próximamente)", Toast.LENGTH_SHORT).show());
+
+        view.findViewById(R.id.btnGestionarAgenda).setOnClickListener(v -> {
+            if (!Publicacion.TIPO_CURSO.equals(tipo)) {
+                Bundle bundle = new Bundle();
+                bundle.putInt("servicioId", idOriginal);
+                bundle.putInt("profesorId", idAutor);
+                Navigation.findNavController(v).navigate(R.id.action_detallePublicacion_to_gestionarAgenda, bundle);
+            } else {
+                Toast.makeText(getContext(), "Los cursos no tienen horarios", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void mostrarDialogoConfirmacion() {
@@ -200,10 +207,11 @@ public class DetallePublicacion extends Fragment {
 
     private void realizarPagoCurso() {
         HistorialDto compra = new HistorialDto();
-        compra.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        compra.setFechapago(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date())); // Formato ISO
         compra.setPago(precio);
-        compra.setUsuarioId(sessionManager.getUserId());
-        compra.setCursoId(idOriginal); // Importante: ID del curso
+        compra.setUsuarioId(sessionManager.getUserId()); // Usar el ID de sesión
+        compra.setCursoId(idOriginal);
+        compra.setServicioId(null); // Importante enviarlo como null si es curso
 
         HistorialApi api = RetrofitClient.getClient().create(HistorialApi.class);
         api.crear(compra).enqueue(new Callback<HistorialDto>() {
@@ -226,14 +234,13 @@ public class DetallePublicacion extends Fragment {
         });
     }
 
-    // --- LOGICA DEL CLIENTE (AGENDAR CLASE) ---
     private void irAAgenda() {
         Bundle bundle = new Bundle();
         bundle.putInt("servicioId", idOriginal);
         bundle.putInt("profesorId", idAutor);
         bundle.putString("titulo", titulo);
+        bundle.putDouble("precio", precio);
 
-        // Navegamos al fragmento AgendarClase que creamos anteriormente
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_detallePublicacion_to_agendarClase, bundle);
     }
